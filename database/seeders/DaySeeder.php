@@ -13,15 +13,13 @@ class DaySeeder extends Seeder
      */
     public function run(): void
     {
-        $timestamps = ['created_at' => now(), 'updated_at' => now()];
-
         DB::table('days')->insert([
-            ['day' => 'Senin', ...$timestamps],
-            ['day' => 'Selasa', ...$timestamps],
-            ['day' => 'Rabu', ...$timestamps],
-            ['day' => 'Kamis', ...$timestamps],
-            ['day' => 'Jumat', ...$timestamps],
-            ['day' => 'Sabtu', ...$timestamps],
+            ['day' => 'Senin'],
+            ['day' => 'Selasa'],
+            ['day' => 'Rabu'],
+            ['day' => 'Kamis'],
+            ['day' => 'Jumat'],
+            ['day' => 'Sabtu'],
         ]);
     }
 }
