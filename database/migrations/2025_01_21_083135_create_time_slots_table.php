@@ -14,8 +14,11 @@ return new class extends Migration
         Schema::create('time_slots', function (Blueprint $table) {
             $table->id();
             $table->string('time_slot');
+            $table->time('start_at');
+            $table->time('end_at');
             $table->integer('credit_hour');
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
     }
 
