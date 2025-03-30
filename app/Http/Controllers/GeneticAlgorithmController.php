@@ -67,7 +67,7 @@ class GeneticAlgorithmController extends Controller
 
         for ($i = 0; $i < count($mutatedOffsprings); $i++) {
             $conflicts = 0;
-            $conflicts = $this->evaluateChromosome($mutatedOffsprings[$i]['chromosome']);
+            $conflicts = $this->evaluateChromosome(collect($mutatedOffsprings[$i]['chromosome']));
             $mutatedOffsprings[$i]
                 ->put('conflict_count', $conflicts)
                 ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $conflicts));
@@ -189,20 +189,22 @@ class GeneticAlgorithmController extends Controller
 
         foreach ($offsprings as $offspring) {
             $randomNumber = $this->getRandomNumber();
-            // echo "$randomNumber < $mutationRate";
+            $arrOffspring = $offspring->toArray();
+
             if ($randomNumber < $mutationRate) {
                 $randomIndex = rand(0, count($offspring['chromosome']) - 1);
                 $randomLectureSlot = LectureSlot::inRandomOrder()->first();
-                $offspring['chromosome'][$randomIndex]['lecture_slot']['lecture_slot_id'] = $randomLectureSlot->id;
-                $offspring['chromosome'][$randomIndex]['lecture_slot']['day'] = $randomLectureSlot->day->day;
-                $offspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['start_at'] = $randomLectureSlot->timeSlot->start_at;
-                $offspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['end_at'] = $randomLectureSlot->timeSlot->end_at;
-                $offspring['chromosome'][$randomIndex]['lecture_slot']['room_class'] = $randomLectureSlot->roomClass->room_class;
+                $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['lecture_slot_id'] = $randomLectureSlot->id;
+                $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['day'] = $randomLectureSlot->day->day;
+                $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['start_at'] = $randomLectureSlot->timeSlot->start_at;
+                $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['end_at'] = $randomLectureSlot->timeSlot->end_at;
+                $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['room_class'] = $randomLectureSlot->roomClass->room_class;
             }
-            $mutatedOffsprings->push(collect($offspring));
+
+            $mutatedOffsprings->push(collect($arrOffspring));
         }
 
-        return $mutatedOffsprings;
+        return collect($mutatedOffsprings);
     }
 
     private function splitLectureSlotsByCreditHour(): array
