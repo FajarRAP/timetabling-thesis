@@ -188,14 +188,16 @@ class GeneticAlgorithmController extends Controller
         $mutatedOffsprings = collect([]);
 
         foreach ($offsprings as $offspring) {
-            if ($this->getRandomNumber() < $mutationRate) {
-                $randomIndex = rand(0, count($offspring) - 1);
+            $randomNumber = $this->getRandomNumber();
+            // echo "$randomNumber < $mutationRate";
+            if ($randomNumber < $mutationRate) {
+                $randomIndex = rand(0, count($offspring['chromosome']) - 1);
                 $randomLectureSlot = LectureSlot::inRandomOrder()->first();
-                $offspring[$randomIndex]['lecture_slot']['lecture_slot_id'] = $randomLectureSlot->id;
-                $offspring[$randomIndex]['lecture_slot']['day'] = $randomLectureSlot->day->day;
-                $offspring[$randomIndex]['lecture_slot']['time_slot']['start_at'] = $randomLectureSlot->timeSlot->start_at;
-                $offspring[$randomIndex]['lecture_slot']['time_slot']['end_at'] = $randomLectureSlot->timeSlot->end_at;
-                $offspring[$randomIndex]['lecture_slot']['room_class'] = $randomLectureSlot->roomClass->room_class;
+                $offspring['chromosome'][$randomIndex]['lecture_slot']['lecture_slot_id'] = $randomLectureSlot->id;
+                $offspring['chromosome'][$randomIndex]['lecture_slot']['day'] = $randomLectureSlot->day->day;
+                $offspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['start_at'] = $randomLectureSlot->timeSlot->start_at;
+                $offspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['end_at'] = $randomLectureSlot->timeSlot->end_at;
+                $offspring['chromosome'][$randomIndex]['lecture_slot']['room_class'] = $randomLectureSlot->roomClass->room_class;
             }
             $mutatedOffsprings->push(collect($offspring));
         }
