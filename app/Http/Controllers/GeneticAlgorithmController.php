@@ -25,16 +25,16 @@ class GeneticAlgorithmController extends Controller
 
         $populationSize = 3;
         $population = $this->initializePopulation($populationSize, true);
+        $chromosomeLength = count($population[0]);
 
         $filteredPopulation = collect([]);
-        // $conflicts = [];
         $conflictCounts = [];
 
         $mapChromosome = fn(array $value, int $key) =>
         [
             'id' => $key,
             'lecture' => [
-                'course_name' => $value['lecture']->course->course_name,
+                'course_name' => $value['lecture']->course,
                 'class' => $value['lecture']->class,
                 'lecturer_name' => $value['lecture']->lecturer->lecturer_name,
             ],
@@ -48,40 +48,40 @@ class GeneticAlgorithmController extends Controller
                 'room_class' => $value['lecture_slot']->roomClass->room_class,
             ],
         ];
+        $filterTwoCreditScoreCourse = fn($item, int $key) => $item['lecture']['course_name']['credit_hour'] === 2;
 
         for ($i = 0; $i < $populationSize; $i++) {
             $conflictCounts[] = 0;
-            // $filteredPopulation[$i] = $population[$i]->filter(
-            //     fn(array $value, int $key) =>
-            //     $value['lecture']['course']['credit_hour'] == 2
-            // )->values();
-            $filteredPopulation[] = $population[$i]->map($mapChromosome);
-            $chromosomeLength = count($filteredPopulation[$i]);
-            $conflictCounts[$i] = $this->evaluateChromosome($filteredPopulation[$i]);
-            $filteredPopulation[$i][] = ['fitness_score' => $chromosomeLength / ($chromosomeLength + $conflictCounts[$i])];
+            $filteredPopulation[$i] = collect([]);
+            // $filteredPopulation[$i]->put('chromosome', $population[$i]->map($mapChromosome)->filter($filterTwoCreditScoreCourse)->values());
+            $filteredPopulation[$i]->put('chromosome', $population[$i]->map($mapChromosome)->values());
+            $conflictCounts[$i] = $this->evaluateChromosome($filteredPopulation[$i]['chromosome']);
+            $filteredPopulation[$i]
+                ->put('conflict_count',  $conflictCounts[$i])
+                ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $conflictCounts[$i]));
         }
 
         $bestChromosome = $this->chromosomeSelection($filteredPopulation);
+        $offsprings = $this->chromosomeCrossover($bestChromosome);
+        $mutatedOffsprings = $this->mutateChromosome($offsprings);
 
-        // $formattedData = collect([]);
-
-        // for ($i = 0; $i < $populationSize; $i++) {
-        //     $cromosomeLength = count($filteredPopulation[$i]);
-        //     $formattedData->push([
-        //         'chromosome_length' => $cromosomeLength,
-        //         'conflict_count' => $conflictCounts[$i],
-        //         'fitness_score' => $cromosomeLength / ($cromosomeLength + $conflictCounts[$i]),
-        //     ]);
-        // }
+        for ($i = 0; $i < count($mutatedOffsprings); $i++) {
+            $conflicts = 0;
+            $conflicts = $this->evaluateChromosome($mutatedOffsprings[$i]['chromosome']);
+            $mutatedOffsprings[$i]
+                ->put('conflict_count', $conflicts)
+                ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $conflicts));
+        }
 
         return response()->json([
             'message' => 'Successful',
             'population_size' => $populationSize,
             'population' => $filteredPopulation,
+            'mutated_offsprings' => $mutatedOffsprings,
         ]);
     }
 
-    private function initializeChromosome(bool $modelResource = false)
+    private function initializeChromosome(bool $modelResource = false): Collection
     {
         $lectures =  LectureResource::collection(Lecture::all());
         [$twoCreditLectureSlots, $threeCreditLectureSlots] = $this->splitLectureSlotsByCreditHour();
@@ -112,7 +112,7 @@ class GeneticAlgorithmController extends Controller
         return collect($timetable);
     }
 
-    private function initializePopulation(int $populationSize, bool $modelResource = false): array
+    private function initializePopulation(int $populationSize, bool $modelResource = false): Collection
     {
         $population = [];
 
@@ -120,10 +120,10 @@ class GeneticAlgorithmController extends Controller
             $population[] = $this->initializeChromosome($modelResource);
         }
 
-        return $population;
+        return collect($population);
     }
 
-    private function evaluateChromosome(Collection $population)
+    private function evaluateChromosome(Collection $population): int
     {
         $conflictCount = 0;
 
@@ -151,12 +151,56 @@ class GeneticAlgorithmController extends Controller
         return $conflictCount / 2;
     }
 
-    private function chromosomeSelection(Collection $population): array
+    private function chromosomeSelection(Collection $population): Collection
     {
-        $sort = $population->sortByDesc(fn(Collection $chromosome, int $key) =>
-        $chromosome->last()['fitness_score'])->values();
+        $sort = $population->sortByDesc('fitness_score')->values();
 
-        return [$sort[0], $sort[1]];
+        return collect([$sort[0], $sort[1]]);
+    }
+
+    private function chromosomeCrossover(Collection $bestChromosome): Collection
+    {
+        $firstChromosome = collect($bestChromosome[0]['chromosome']);
+        $secondChromosome = collect($bestChromosome[1]['chromosome']);
+        $chromosomeLength = count($firstChromosome[0]);
+
+        $crossoverPoint = (int) ($chromosomeLength / 2);
+        $halfFirstChromosome = $firstChromosome->splice($crossoverPoint);
+        $halfSecondChromosome = $secondChromosome->splice($crossoverPoint);
+
+        $offsprings = collect([]);
+        $offsprings->push(collect([])
+            ->put(
+                'chromosome',
+                collect([...$firstChromosome, ...$halfSecondChromosome])
+            ));
+        $offsprings->push(collect([])
+            ->put(
+                'chromosome',
+                collect([...$secondChromosome, ...$halfFirstChromosome])
+            ));
+
+        return $offsprings;
+    }
+
+    private function mutateChromosome(Collection $offsprings, float $mutationRate = 0.2): Collection
+    {
+        $mutatedOffsprings = collect([]);
+
+        foreach ($offsprings as $offspring) {
+            if ($this->getRandomNumber() < $mutationRate) {
+                $randomIndex = rand(0, count($offspring) - 1);
+                $randomLectureSlot = LectureSlot::inRandomOrder()->first();
+                $offspring[$randomIndex]['lecture_slot']['lecture_slot_id'] = $randomLectureSlot->id;
+                $offspring[$randomIndex]['lecture_slot']['day'] = $randomLectureSlot->day->day;
+                $offspring[$randomIndex]['lecture_slot']['time_slot']['start_at'] = $randomLectureSlot->timeSlot->start_at;
+                $offspring[$randomIndex]['lecture_slot']['time_slot']['end_at'] = $randomLectureSlot->timeSlot->end_at;
+                $offspring[$randomIndex]['lecture_slot']['room_class'] = $randomLectureSlot->roomClass->room_class;
+            }
+            $mutatedOffsprings->push(collect($offspring));
+        }
+
+        return $mutatedOffsprings;
     }
 
     private function splitLectureSlotsByCreditHour(): array
@@ -169,5 +213,10 @@ class GeneticAlgorithmController extends Controller
         $threeCreditLectureSlots = collect($lectureSlots)->filter($isThreeCreditHour);
 
         return [$twoCreditLectureSlots, $threeCreditLectureSlots];
+    }
+
+    private function getRandomNumber(): float
+    {
+        return mt_rand() / mt_getrandmax();
     }
 }
