@@ -11,79 +11,70 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
 
+/**
+ * PR BROWW:
+ * - konfliknya diitung 2x, padahal sama hanya tertukar posisi index saja, e.g.: ada di excel -> sementara dibagi 2 dulu, awoakwoak
+ *
+ * Problems Solved:
+ * - Jadi ainx tanggal 17 Maret 2025 mengalami masalah ketika mau bikin timetablenya secara semi deterministik, ternyata masalahnya itu terletak di lecture slot. Pastikan lecture slotnya itu tersedia, contoh kalo misalnya total dari course yang 3 sks itu ada 200 (($course->credit_hour == 3)->count()), maka lecture slot untuk 3 sks harus lebih dari itu (antara ruangan/time slot yang diperbanyak, karena hari ga mungkin).
+ * 
+ * Metode seleksi
+ * 1. Elitisme:
+ * - Keragaman kromosom akan terbatas karena yang diseleksi pasti dengan nilai fitness terbesar
+ * 
+ * 2. Turnamen
+ * 
+ * 3. Rolet Putar
+ * 
+ */
+
 class GeneticAlgorithmController extends Controller
 {
     public function generate()
     {
-        /**
-         * PR BROWW:
-         * - konfliknya diitung 2x, padahal sama hanya tertukar posisi index saja, e.g.: ada di excel -> sementara dibagi 2 dulu, awoakwoak
-         *
-         * Problems Solved:
-         * - Jadi ainx tanggal 17 Maret 2025 mengalami masalah ketika mau bikin timetablenya secara semi deterministik, ternyata masalahnya itu terletak di lecture slot. Pastikan lecture slotnya itu tersedia, contoh kalo misalnya total dari course yang 3 sks itu ada 200 (($course->credit_hour == 3)->count()), maka lecture slot untuk 3 sks harus lebih dari itu (antara ruangan/time slot yang diperbanyak, karena hari ga mungkin).
-         */
+        set_time_limit(3600);
 
-        $populationSize = 3;
+        $populationSize = 15;
+        $maxGeneration = 100;
         $population = $this->initializePopulation($populationSize, true);
-        $chromosomeLength = count($population[0]);
+        $chromosomeLength = count($population[0]['chromosome']);
 
-        $filteredPopulation = collect([]);
-        $conflictCounts = [];
+        for ($generation = 0; $generation < $maxGeneration; $generation++) {
+            for ($i = 0; $i < $populationSize; $i++) {
+                $conflictCount = $this->evaluateChromosome(collect($population[$i]['chromosome']));
+                $population[$i]
+                    ->put('conflict_count', $conflictCount)
+                    ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $conflictCount));
+            }
 
-        $mapChromosome = fn(array $value, int $key) =>
-        [
-            'id' => $key,
-            'lecture' => [
-                'course_name' => $value['lecture']->course,
-                'class' => $value['lecture']->class,
-                'lecturer_name' => $value['lecture']->lecturer->lecturer_name,
-            ],
-            'lecture_slot' => [
-                'lecture_slot_id' => $value['lecture_slot']->id,
-                'day' => $value['lecture_slot']->day->day,
-                'time_slot' => [
-                    'start_at' => $value['lecture_slot']->timeSlot->start_at,
-                    'end_at' => $value['lecture_slot']->timeSlot->end_at
-                ],
-                'room_class' => $value['lecture_slot']->roomClass->room_class,
-            ],
-        ];
-        $filterTwoCreditScoreCourse = fn($item, int $key) => $item['lecture']['course_name']['credit_hour'] === 2;
+            $bestChromosome = $this->chromosomeSelection($population);
+            $offsprings = $this->chromosomeCrossover($bestChromosome);
+            $mutatedOffsprings = $this->mutateChromosome($offsprings, .5);
 
-        for ($i = 0; $i < $populationSize; $i++) {
-            $conflictCounts[] = 0;
-            $filteredPopulation[$i] = collect([]);
-            // $filteredPopulation[$i]->put('chromosome', $population[$i]->map($mapChromosome)->filter($filterTwoCreditScoreCourse)->values());
-            $filteredPopulation[$i]->put('chromosome', $population[$i]->map($mapChromosome)->values());
-            $conflictCounts[$i] = $this->evaluateChromosome($filteredPopulation[$i]['chromosome']);
-            $filteredPopulation[$i]
-                ->put('conflict_count',  $conflictCounts[$i])
-                ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $conflictCounts[$i]));
-        }
+            for ($i = 0; $i < count($mutatedOffsprings); $i++) {
+                $conflictCount = $this->evaluateChromosome(collect($mutatedOffsprings[$i]['chromosome']));
+                $mutatedOffsprings[$i]
+                    ->put('conflict_count', $conflictCount)
+                    ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $conflictCount));
+            }
 
-        $bestChromosome = $this->chromosomeSelection($filteredPopulation);
-        $offsprings = $this->chromosomeCrossover($bestChromosome);
-        $mutatedOffsprings = $this->mutateChromosome($offsprings);
-
-        for ($i = 0; $i < count($mutatedOffsprings); $i++) {
-            $conflicts = 0;
-            $conflicts = $this->evaluateChromosome(collect($mutatedOffsprings[$i]['chromosome']));
-            $mutatedOffsprings[$i]
-                ->put('conflict_count', $conflicts)
-                ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $conflicts));
+            $population = $this->regeneration($population, $mutatedOffsprings);
         }
 
         return response()->json([
             'message' => 'Successful',
             'population_size' => $populationSize,
-            'population' => $filteredPopulation,
-            'mutated_offsprings' => $mutatedOffsprings,
+            'population' => $population->map(fn(Collection $value) => collect([
+                'conflict_count' => $value['conflict_count'],
+                'fitness_score' => $value['fitness_score'],
+            ]))->values(),
+            'best_fitness_score' => $population->max('fitness_score'),
         ]);
     }
 
     private function initializeChromosome(bool $modelResource = false): Collection
     {
-        $lectures =  LectureResource::collection(Lecture::all());
+        $lectures = LectureResource::collection(Lecture::all());
         [$twoCreditLectureSlots, $threeCreditLectureSlots] = $this->splitLectureSlotsByCreditHour();
         $lecturesCount = $lectures->count();
         $timetable = [];
@@ -114,13 +105,15 @@ class GeneticAlgorithmController extends Controller
 
     private function initializePopulation(int $populationSize, bool $modelResource = false): Collection
     {
-        $population = [];
+        $population = collect([]);
 
         for ($i = 0; $i < $populationSize; $i++) {
-            $population[] = $this->initializeChromosome($modelResource);
+            $chromosome = $this->initializeChromosome($modelResource);
+            $mappedChromosome = $this->mapChromosome($chromosome);
+            $population->push(collect([])->put('chromosome', $mappedChromosome));
         }
 
-        return collect($population);
+        return $population;
     }
 
     private function evaluateChromosome(Collection $population): int
@@ -138,7 +131,8 @@ class GeneticAlgorithmController extends Controller
                 $isSameDay = $value['lecture_slot']['day'] == $v['lecture_slot']['day'];
                 $isSameLecture = $key == $k;
 
-                if ($isSameLecture) continue;
+                if ($isSameLecture)
+                    continue;
 
                 if ($isSameRoomClass && $isSameDay) {
                     if ($start_at_first < $end_at_second && $end_at_first > $start_at_second) {
@@ -207,6 +201,17 @@ class GeneticAlgorithmController extends Controller
         return collect($mutatedOffsprings);
     }
 
+    private function regeneration(Collection $population, Collection $mutatedOffsprings): Collection
+    {
+        $newPopulation = collect($population->all());
+        $newPopulation->push($mutatedOffsprings[0])
+            ->push($mutatedOffsprings[1]);
+        $sorted = $newPopulation->sortByDesc('fitness_score')->values();
+        $sorted->pop(2);
+
+        return collect($sorted->all());
+    }
+
     private function splitLectureSlotsByCreditHour(): array
     {
         $isTwoCreditHour = fn(JsonResource $item) => $item->timeSlot->credit_hour === 2;
@@ -217,6 +222,31 @@ class GeneticAlgorithmController extends Controller
         $threeCreditLectureSlots = collect($lectureSlots)->filter($isThreeCreditHour);
 
         return [$twoCreditLectureSlots, $threeCreditLectureSlots];
+    }
+
+    private function mapChromosome(Collection $chromosome): Collection
+    {
+        $mapChromosome = fn(array $value, int $key) =>
+        [
+            'id' => $key,
+            'lecture' => [
+                'course_name' => $value['lecture']->course,
+                'class' => $value['lecture']->class,
+                'lecturer_name' => $value['lecture']->lecturer->lecturer_name,
+            ],
+            'lecture_slot' => [
+                'lecture_slot_id' => $value['lecture_slot']->id,
+                'day' => $value['lecture_slot']->day->day,
+                'time_slot' => [
+                    'start_at' => $value['lecture_slot']->timeSlot->start_at,
+                    'end_at' => $value['lecture_slot']->timeSlot->end_at
+                ],
+                'room_class' => $value['lecture_slot']->roomClass->room_class,
+            ],
+        ];
+        $filterTwoCreditScoreCourse = fn(array $item, int $key) => $item['lecture']['course_name']['credit_hour'] === 2;
+
+        return $chromosome->map($mapChromosome)->values();
     }
 
     private function getRandomNumber(): float
