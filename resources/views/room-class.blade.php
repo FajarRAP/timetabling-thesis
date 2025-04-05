@@ -94,9 +94,7 @@
                 });
             });
 
-            createItemAJAX({
-                url: '{{ route('room-class.store') }}'
-            })
+            createItemAJAX();
         </script>
     @endpush
 </x-app-layout>
