@@ -5,4 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class RoomClass extends Model {}
+class RoomClass extends Model
+{
+    protected $fillable = [
+        'room_class',
+    ];
+}
