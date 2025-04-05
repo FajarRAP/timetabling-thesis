@@ -6,7 +6,12 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 flex flex-col gap-4">
+            <x-primary-button class="self-end" x-data=""
+                x-on:click.prevent="$dispatch('open-modal', 'add-course')">
+                {{ __('Add Course') }}
+            </x-primary-button>
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                     <table class="w-full text-sm text-left rtl:text-right text-gray-500">
@@ -20,6 +25,9 @@
                                 </th>
                                 <th scope="col" class="px-6 py-3">
                                     {{ __('Credit Hour') }}
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    {{ __('Actions') }}
                                 </th>
                             </tr>
                         </thead>
@@ -35,41 +43,68 @@
                                     <td class="px-6 py-4">
                                         {{ $course->credit_hour }}
                                     </td>
+                                    <td class="px-6 py-4">
+                                        <x-danger-button data-id="{{ $course->id }}" class="delete-item-button">
+                                            {{ __('Delete') }}
+                                        </x-danger-button>
+                                    </td>
                                 </tr>
                             @endforeach
                         </tbody>
 
                     </table>
-
-                    <!-- Pagination -->
-                    <!-- <nav class="flex items-center flex-column flex-wrap md:flex-row justify-between p-4" aria-label="Table navigation">
-                        <span class="text-sm font-normal text-gray-500 mb-4 md:mb-0 block w-full md:inline md:w-auto">Showing <span class="font-semibold text-gray-900">1-10</span> of <span class="font-semibold text-gray-900">1000</span></span>
-                        <ul class="inline-flex -space-x-px rtl:space-x-reverse text-sm h-8">
-                            <li>
-                                <a href="#" class="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700">Previous</a>
-                            </li>
-                            <li>
-                                <a href="#" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700">1</a>
-                            </li>
-                            <li>
-                                <a href="#" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700">2</a>
-                            </li>
-                            <li>
-                                <a href="#" aria-current="page" class="flex items-center justify-center px-3 h-8 text-blue-600 border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700">3</a>
-                            </li>
-                            <li>
-                                <a href="#" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700">4</a>
-                            </li>
-                            <li>
-                                <a href="#" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700">5</a>
-                            </li>
-                            <li>
-                                <a href="#" class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700">Next</a>
-                            </li>
-                        </ul>
-                    </nav> -->
                 </div>
             </div>
         </div>
     </div>
+
+    <x-modal name="add-course" :show="$errors->addRoomClass->isNotEmpty()" focusable>
+        <form id="form" method="POST" action="{{ route('course.store') }}" class="p-6">
+            @csrf
+            @method('POST')
+
+            <div class="mt-6">
+                <x-input-label for="course_name" value="{{ __('Course Name') }}" />
+                <x-text-input id="course_name" name="course_name" type="text" class="mt-1 block w-3/4"
+                    placeholder="{{ __('Course Name') }}" />
+                <x-input-error-ajax class="input-error course_name" />
+            </div>
+            <div class="mt-6">
+                <x-input-label for="credit_hour" value="{{ __('Credit Hour') }}" />
+                <x-text-input id="credit_hour" name="credit_hour" type="text" class="mt-1 block w-3/4"
+                    placeholder="{{ __('Credit Hour') }}" />
+                <x-input-error-ajax class="input-error credit_hour" />
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <x-secondary-button x-on:click="$dispatch('close')">
+                    {{ __('Cancel') }}
+                </x-secondary-button>
+
+                <x-primary-button class="ms-3">
+                    {{ __('Add Course') }}
+                </x-primary-button>
+            </div>
+        </form>
+    </x-modal>
+
+    @push('scripts')
+        <script src="../assets/main.js"></script>
+        <script>
+            const buttons = document.querySelectorAll('.delete-item-button');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const id = this.getAttribute('data-id');
+                    const url = '{{ route('course.destroy', ':id') }}'.replace(':id', id);
+
+                    deleteItemAJAX({
+                        url: url
+                    })
+                });
+            });
+
+            createItemAJAX();
+        </script>
+    @endpush
 </x-app-layout>
