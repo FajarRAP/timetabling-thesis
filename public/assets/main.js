@@ -1,10 +1,9 @@
-function createItemAJAX({ url }) {
+function createItemAJAX() {
     const formNode = document.getElementById("form");
-
     formNode.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        const response = await fetch(url, {
+        const response = await fetch(formNode.attributes.action.value, {
             method: "POST",
             body: new FormData(formNode),
         });
@@ -22,6 +21,7 @@ function createItemAJAX({ url }) {
                 break;
             case 422:
                 const validationErrors = data.errors;
+                console.log(validationErrors);
                 for (const [key, values] of Object.entries(validationErrors)) {
                     const errorElement = document.querySelector(
                         `.input-error.${key}`
