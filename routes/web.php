@@ -5,6 +5,8 @@ use App\Http\Controllers\LectureController;
 use App\Http\Controllers\LecturerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomClassController;
+use App\Http\Controllers\TimetableController;
+use App\Http\Controllers\TimetableEntryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => view('welcome'));
@@ -31,6 +33,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/lecture', 'index')->name('lecture');
             Route::post('/lecture', 'store')->name('lecture.store');
             Route::delete('/lecture/{lecture}', 'destroy')->name('lecture.destroy');
+        });
+        Route::controller(TimetableController::class)->group(function () {
+            Route::get('/timetable', 'index')->name('timetable');
+            Route::post('/timetable', 'store')->name('timetable.store');
+            Route::delete('/timetable/{timetable}', 'destroy')->name('timetable.destroy');
+        });
+        Route::controller(TimetableEntryController::class)->group(function () {
+            Route::get('/timetable-entry/{timetable}', 'index')->name('timetable-entry');
+            Route::post('/timetable-entry', 'store')->name('timetable-entry.store');
+            Route::delete('/timetable-entry/{timetableEntry}', 'destroy')->name('timetable-entry.destroy');
         });
     });
 });
