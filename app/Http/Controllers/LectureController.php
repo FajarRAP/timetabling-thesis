@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\LectureCollection;
 use App\Http\Resources\LectureResource;
+use App\Models\Course;
 use App\Models\Lecture;
+use App\Models\Lecturer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class LectureController extends Controller
 {
@@ -14,9 +16,10 @@ class LectureController extends Controller
      */
     public function index()
     {
-        return response()->json([
-            'message' => 'Successful',
-            'data' => new LectureCollection(Lecture::all()),
+        return view('lecture', [
+            'lectures' => Lecture::all(),
+            'courses' => Course::all(),
+            'lecturers' => Lecturer::all(),
         ]);
     }
 
@@ -25,7 +28,24 @@ class LectureController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'course_id' => 'required',
+            'lecturer_id' => 'required',
+            'class' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $lecture = Lecture::create($request->all());
+
+        return response()->json([
+            'message' => 'Successful',
+            'data' => $lecture,
+        ], 201);
     }
 
     /**
@@ -52,6 +72,11 @@ class LectureController extends Controller
      */
     public function destroy(Lecture $lecture)
     {
-        //
+        $lecture->delete();
+
+        return response()->json([
+            'message' => 'Successful',
+            'data' => $lecture,
+        ]);
     }
 }

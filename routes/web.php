@@ -1,17 +1,13 @@
 <?php
 
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\LectureController;
 use App\Http\Controllers\LecturerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomClassController;
-use App\Http\Resources\LectureResource;
-use App\Models\Lecture;
-use App\Models\Lecturer;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', fn() => view('welcome'));
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('dashboard')->group(function () {
@@ -31,11 +27,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/lecturer', 'store')->name('lecturer.store');
             Route::delete('/lecturer/{lecturer}', 'destroy')->name('lecturer.destroy');
         });
+        Route::controller(LectureController::class)->group(function () {
+            Route::get('/lecture', 'index')->name('lecture');
+            Route::post('/lecture', 'store')->name('lecture.store');
+            Route::delete('/lecture/{lecture}', 'destroy')->name('lecture.destroy');
+        });
     });
-});
-
-Route::middleware('auth')->group(function () {
-    Route::get('/lecture', fn() => view('lecture', ['lectures' => LectureResource::collection(Lecture::all())]))->name('lecture');
 });
 
 Route::middleware('auth')->group(function () {

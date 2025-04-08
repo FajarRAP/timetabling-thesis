@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Lecture extends Model
 {
+    protected $fillable = [
+        'course_id',
+        'lecturer_id',
+        'class',
+    ];
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
