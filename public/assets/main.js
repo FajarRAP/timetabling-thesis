@@ -21,11 +21,14 @@ function createItemAJAX() {
                 break;
             case 422:
                 const validationErrors = data.errors;
-                console.log(validationErrors);
                 for (const [key, values] of Object.entries(validationErrors)) {
+                    console.log(values);
                     const errorElement = document.querySelector(
                         `.input-error.${key}`
                     );
+                    while (errorElement.firstChild) {
+                        errorElement.removeChild(errorElement.firstChild);
+                    }
                     errorElement.classList.add("mt-2");
                     values.forEach((element) => {
                         const li = document.createElement("li");
@@ -38,14 +41,23 @@ function createItemAJAX() {
     });
 }
 
-async function deleteItemAJAX({ url }) {
-    const response = await fetch(url, {
-        headers: {
-            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]')
-                .content,
-        },
-        method: "DELETE",
-    });
+async function deleteItemAJAX() {
+    const buttons = document.querySelectorAll(".delete-item-button");
 
-    if (response.ok) window.location.reload();
+    buttons.forEach((button) => {
+        button.addEventListener("click", async function () {
+            const url = this.getAttribute("data-url");
+
+            const response = await fetch(url, {
+                headers: {
+                    "X-CSRF-TOKEN": document.querySelector(
+                        'meta[name="csrf-token"]'
+                    ).content,
+                },
+                method: "DELETE",
+            });
+
+            if (response.ok) window.location.reload();
+        });
+    });
 }
