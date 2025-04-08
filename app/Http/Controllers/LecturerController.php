@@ -34,11 +34,11 @@ class LecturerController extends Controller
             ], 422);
         }
 
-        $course = Lecturer::create($request->all());
+        $lecturer = Lecturer::create($request->all());
 
         return response()->json([
             'message' => 'Successful',
-            'data' => $course,
+            'data' => $lecturer,
         ], 201);
     }
 

@@ -19,7 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
         Route::controller(CourseController::class)->group(function () {
             Route::get('/course', 'index')->name('course');
-            Route::post('/room-class', 'store')->name('course.store');
+            Route::post('/course', 'store')->name('course.store');
             Route::delete('/course/{course}', 'destroy')->name('course.destroy');
         });
         Route::controller(LecturerController::class)->group(function () {

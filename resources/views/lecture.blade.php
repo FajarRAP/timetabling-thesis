@@ -50,7 +50,9 @@
                                         {{ $lecture->class }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <x-danger-button data-id="{{ $lecture->id }}" class="delete-item-button">
+                                        <x-danger-button
+                                            data-url="{{ route('lecture.destroy', ['lecture' => $lecture]) }}"
+                                            class="delete-item-button">
                                             {{ __('Delete') }}
                                         </x-danger-button>
                                     </td>
@@ -114,19 +116,7 @@
     @push('scripts')
         <script src="../assets/main.js"></script>
         <script>
-            const buttons = document.querySelectorAll('.delete-item-button');
-
-            buttons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    const url = '{{ route('lecture.destroy', ':id') }}'.replace(':id', id);
-
-                    deleteItemAJAX({
-                        url: url
-                    })
-                });
-            });
-
+            deleteItemAJAX();
             createItemAJAX();
         </script>
     @endpush

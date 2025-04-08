@@ -38,7 +38,9 @@
                                         {{ $roomClass->room_class }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <x-danger-button data-id="{{ $roomClass->id }}" class="delete-item-button">
+                                        <x-danger-button
+                                            data-url="{{ route('room-class.destroy', ['roomClass' => $roomClass]) }}"
+                                            class="delete-item-button">
                                             {{ __('Delete') }}
                                         </x-danger-button>
                                     </td>
@@ -52,7 +54,7 @@
         </div>
     </div>
 
-    <x-modal name="add-room-class" :show="$errors->addRoomClass->isNotEmpty()" focusable>
+    <x-modal name="add-room-class" focusable>
         <form id="form" method="POST" action="{{ route('room-class.store') }}" class="p-6">
             @csrf
             @method('POST')
@@ -81,20 +83,8 @@
     @push('scripts')
         <script src="../assets/main.js"></script>
         <script>
-            const buttons = document.querySelectorAll('.delete-item-button');
-
-            buttons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const id = this.getAttribute('data-id');
-                    const url = '{{ route('room-class.destroy', ':id') }}'.replace(':id', id);
-
-                    deleteItemAJAX({
-                        url: url
-                    })
-                });
-            });
-
             createItemAJAX();
+            deleteItemAJAX();
         </script>
     @endpush
 </x-app-layout>
