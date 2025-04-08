@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\LecturerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomClassController;
 use App\Http\Resources\LectureResource;
@@ -25,11 +26,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/room-class', 'store')->name('course.store');
             Route::delete('/course/{course}', 'destroy')->name('course.destroy');
         });
+        Route::controller(LecturerController::class)->group(function () {
+            Route::get('/lecturer', 'index')->name('lecturer');
+            Route::post('/lecturer', 'store')->name('lecturer.store');
+            Route::delete('/lecturer/{lecturer}', 'destroy')->name('lecturer.destroy');
+        });
     });
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/lecturer', fn() => view('lecturer', ['lecturers' => Lecturer::all()]))->name('lecturer');
     Route::get('/lecture', fn() => view('lecture', ['lectures' => LectureResource::collection(Lecture::all())]))->name('lecture');
 });
 
