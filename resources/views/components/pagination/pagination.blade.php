@@ -19,6 +19,10 @@
         </x-pagination.pagination-link>
 
         @foreach ($elements as $element)
+            @if ($element == '...')
+                @continue
+            @endif
+
             @foreach ($element as $page => $url)
                 @php
                     $isActive = $page == $paginator->currentPage();
