@@ -7,8 +7,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 flex flex-col gap-4">
-            <x-primary-button class="self-end" x-data=""
-                x-on:click.prevent="$dispatch('open-modal', 'add-lecture')">
+            <x-primary-button class="self-end" x-data x-on:click.prevent="$dispatch('open-modal', 'add-lecture')">
                 {{ __('Add Lecture') }}
             </x-primary-button>
 
@@ -50,23 +49,26 @@
                                         {{ $lecture->class }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <x-danger-button
-                                            data-url="{{ route('lecture.destroy', ['lecture' => $lecture]) }}"
-                                            class="delete-item-button">
+                                        <x-danger-button x-data
+                                            x-on:click="$dispatch('open-modal', 'delete-lecture-{{ $lecture->id }}')">
                                             {{ __('Delete') }}
                                         </x-danger-button>
+                                        <x-delete-data-modal :action="route('lecture.destroy', $lecture)"
+                                            name="delete-lecture-{{ $lecture->id }}" />
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
+
+                    {{ $lectures->links('components.pagination.pagination') }}
                 </div>
             </div>
         </div>
     </div>
 
-    <x-modal name="add-lecture" focusable>
-        <form id="form" method="POST" action="{{ route('lecture.store') }}" class="p-6">
+    <x-modal name="add-lecture" :show="$errors->addLecture->isNotEmpty()" focusable>
+        <form method="POST" action="{{ route('lecture.store') }}" class="p-6">
             @csrf
             @method('POST')
 
@@ -80,7 +82,7 @@
                         @endforeach
                     </x-slot:options>
                 </x-select-input>
-                <x-input-error-ajax class="input-error course_id" />
+                <x-input-error :messages="$errors->addLecture->get('course_id')" />
             </div>
             <div class="mt-6">
                 <x-input-label for="lecturer_id" value="{{ __('Select Lecturer') }}" />
@@ -92,13 +94,13 @@
                         @endforeach
                     </x-slot:options>
                 </x-select-input>
-                <x-input-error-ajax class="input-error lecturer_id" />
+                <x-input-error :messages="$errors->addLecture->get('lecturer_id')" />
             </div>
             <div class="mt-6">
                 <x-input-label for="class" value="{{ __('Class') }}" />
                 <x-text-input id="class" name="class" type="text" class="mt-1 block w-3/4"
                     placeholder="{{ __('Class') }}" />
-                <x-input-error-ajax class="input-error class" />
+                <x-input-error :messages="$errors->addLecture->get('class')" />
             </div>
 
             <div class="mt-6 flex justify-end">
@@ -112,12 +114,4 @@
             </div>
         </form>
     </x-modal>
-
-    @push('scripts')
-        <script src="../assets/main.js"></script>
-        <script>
-            deleteItemAJAX();
-            createItemAJAX();
-        </script>
-    @endpush
 </x-app-layout>
