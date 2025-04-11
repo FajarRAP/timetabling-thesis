@@ -38,24 +38,26 @@
                                         {{ $roomClass->room_class }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <x-danger-button
-                                            data-url="{{ route('room-class.destroy', ['roomClass' => $roomClass]) }}"
-                                            class="delete-item-button">
+                                        <x-danger-button x-data=""
+                                            x-on:click="$dispatch('open-modal', 'delete-room-class-{{ $roomClass->id }}')">
                                             {{ __('Delete') }}
                                         </x-danger-button>
+                                        <x-delete-data-modal :action="route('room-class.destroy', $roomClass)"
+                                            name="delete-room-class-{{ $roomClass->id }}" />
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
-
                     </table>
+
+                    {{ $roomClasses->links('components.pagination.pagination') }}
                 </div>
             </div>
         </div>
     </div>
 
-    <x-modal name="add-room-class" focusable>
-        <form id="form" method="POST" action="{{ route('room-class.store') }}" class="p-6">
+    <x-modal name="add-room-class" :show="$errors->addRoomClass->isNotEmpty()" focusable>
+        <form method="POST" action="{{ route('room-class.store') }}" class="p-6">
             @csrf
             @method('POST')
 
@@ -65,7 +67,7 @@
                 <x-text-input id="room_class" name="room_class" type="text" class="mt-1 block w-3/4"
                     placeholder="{{ __('Room Class Name') }}" />
 
-                <x-input-error-ajax class="input-error room_class" />
+                <x-input-error :messages="$errors->addRoomClass->get('room_class')" />
             </div>
 
             <div class="mt-6 flex justify-end">
@@ -79,12 +81,4 @@
             </div>
         </form>
     </x-modal>
-
-    @push('scripts')
-        <script src="../assets/main.js"></script>
-        <script>
-            createItemAJAX();
-            deleteItemAJAX();
-        </script>
-    @endpush
 </x-app-layout>

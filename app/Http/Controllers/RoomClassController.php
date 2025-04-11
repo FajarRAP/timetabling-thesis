@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\RoomClass;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class RoomClassController extends Controller
 {
@@ -14,7 +13,7 @@ class RoomClassController extends Controller
     public function index()
     {
         return view('room-class', [
-            'roomClasses' => RoomClass::all(),
+            'roomClasses' => RoomClass::paginate(5),
         ]);
     }
 
@@ -23,22 +22,13 @@ class RoomClassController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validateWithBag('addRoomClass', [
             'room_class' => 'required',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        RoomClass::create($validated);
 
-        $roomClass = RoomClass::create($request->all());
-
-        return response()->json([
-            'message' => 'Successful',
-            'data' => $roomClass,
-        ], 201);
+        return redirect(route('room-class'))->with('success', __('Add Data Successful'));
     }
 
     /**
@@ -46,10 +36,7 @@ class RoomClassController extends Controller
      */
     public function show(RoomClass $roomClass)
     {
-        return response()->json([
-            'message' => 'Successful',
-            'data' => $roomClass,
-        ]);
+        //
     }
 
     /**
@@ -67,9 +54,6 @@ class RoomClassController extends Controller
     {
         $roomClass->delete();
 
-        return response()->json([
-            'message' => 'Successful',
-            'data' => $roomClass,
-        ]);
+        return redirect(route('room-class'))->with('success', __('Delete Data Successful'));
     }
 }
