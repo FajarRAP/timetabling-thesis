@@ -7,8 +7,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 flex flex-col gap-4">
-            <x-primary-button class="self-end" x-data=""
-                x-on:click.prevent="$dispatch('open-modal', 'add-course')">
+            <x-primary-button class="self-end" x-data x-on:click.prevent="$dispatch('open-modal', 'add-course')">
                 {{ __('Add Course') }}
             </x-primary-button>
 
@@ -44,7 +43,7 @@
                                         {{ $course->credit_hour }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <x-danger-button class="delete-item-button" x-data=""
+                                        <x-danger-button x-data
                                             x-on:click.prevent="$dispatch('open-modal', 'delete-course-{{ $course->id }}')">
                                             {{ __('Delete') }}
                                         </x-danger-button>
