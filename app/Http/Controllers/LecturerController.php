@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Lecturer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class LecturerController extends Controller
 {
@@ -14,7 +13,7 @@ class LecturerController extends Controller
     public function index()
     {
         return view('lecturer', [
-            'lecturers' => Lecturer::all(),
+            'lecturers' => Lecturer::paginate(5),
         ]);
     }
 
@@ -23,23 +22,14 @@ class LecturerController extends Controller
      */
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validateWithBag('addLecturer', [
             'lecturer_number' => 'required',
             'lecturer_name' => 'required',
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'errors' => $validator->errors()
-            ], 422);
-        }
+        Lecturer::create($validated);
 
-        $lecturer = Lecturer::create($request->all());
-
-        return response()->json([
-            'message' => 'Successful',
-            'data' => $lecturer,
-        ], 201);
+        return redirect(route('lecturer'))->with('success', __('Add Data Successful'));
     }
 
     /**
@@ -47,7 +37,7 @@ class LecturerController extends Controller
      */
     public function show(Lecturer $lecturer)
     {
-        return response()->json(['message' => 'Successful', 'data' => $lecturer]);
+        //
     }
 
     /**
@@ -65,9 +55,6 @@ class LecturerController extends Controller
     {
         $lecturer->delete();
 
-        return response()->json([
-            'message' => 'Successful',
-            'data' => $lecturer,
-        ]);
+        return redirect(route('lecturer'))->with('success', __('Delete Data Successful'));
     }
 }

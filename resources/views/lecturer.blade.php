@@ -44,24 +44,26 @@
                                         {{ $lecturer->lecturer_name }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <x-danger-button
-                                            data-url="{{ route('lecturer.destroy', ['lecturer' => $lecturer]) }}"
-                                            class="delete-item-button">
+                                        <x-danger-button x-data=""
+                                            x-on:click="$dispatch('open-modal', 'delete-lecturer-{{ $lecturer->id }}')">
                                             {{ __('Delete') }}
                                         </x-danger-button>
+                                        <x-delete-data-modal :action="route('lecturer.destroy', $lecturer)"
+                                            name="delete-lecturer-{{ $lecturer->id }}" />
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
-
                     </table>
+
+                    {{ $lecturers->links('components.pagination.pagination') }}
                 </div>
             </div>
         </div>
     </div>
 
-    <x-modal name="add-lecturer" focusable>
-        <form id="form" method="POST" action="{{ route('lecturer.store') }}" class="p-6">
+    <x-modal name="add-lecturer" :show="$errors->addLecturer->isNotEmpty()" focusable>
+        <form method="POST" action="{{ route('lecturer.store') }}" class="p-6">
             @csrf
             @method('POST')
 
@@ -69,13 +71,13 @@
                 <x-input-label for="lecturer_number" value="{{ __('Lecturer Number') }}" />
                 <x-text-input id="lecturer_number" name="lecturer_number" type="text" class="mt-1 block w-3/4"
                     placeholder="{{ __('Lecturer Number') }}" />
-                <x-input-error-ajax class="input-error lecturer_number" />
+                <x-input-error :messages="$errors->addLecturer->get('lecturer_number')" />
             </div>
             <div class="mt-6">
                 <x-input-label for="lecturer_name" value="{{ __('Lecturer Name') }}" />
                 <x-text-input id="lecturer_name" name="lecturer_name" type="text" class="mt-1 block w-3/4"
                     placeholder="{{ __('lecturer Name') }}" />
-                <x-input-error-ajax class="input-error lecturer_name" />
+                <x-input-error :messages="$errors->addLecturer->get('lecturer_name')" />
             </div>
 
             <div class="mt-6 flex justify-end">
@@ -89,12 +91,4 @@
             </div>
         </form>
     </x-modal>
-
-    @push('scripts')
-        <script src="../assets/main.js"></script>
-        <script>
-            deleteItemAJAX();
-            createItemAJAX();
-        </script>
-    @endpush
 </x-app-layout>
