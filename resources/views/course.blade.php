@@ -44,37 +44,43 @@
                                         {{ $course->credit_hour }}
                                     </td>
                                     <td class="px-6 py-4">
-                                        <x-danger-button data-url="{{ route('course.destroy', ['course' => $course]) }}"
-                                            class="delete-item-button">
+                                        <x-danger-button class="delete-item-button" x-data=""
+                                            x-on:click.prevent="$dispatch('open-modal', 'delete-course-{{ $course->id }}')">
                                             {{ __('Delete') }}
                                         </x-danger-button>
+                                        <x-delete-data-modal :action="route('course.destroy', $course)"
+                                            name="delete-course-{{ $course->id }}" />
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
-
                     </table>
+                    {{ $courses->links('components.pagination.pagination') }}
                 </div>
             </div>
         </div>
     </div>
 
-    <x-modal name="add-course" focusable>
+    <x-modal name="add-course" :show="$errors->addCourse->isNotEmpty()" focusable>
         <form id="form" method="POST" action="{{ route('course.store') }}" class="p-6">
             @csrf
             @method('POST')
+
+            <h2 class="text-lg font-medium text-gray-900">
+                {{ __('Add Course') }}
+            </h2>
 
             <div class="mt-6">
                 <x-input-label for="course_name" value="{{ __('Course Name') }}" />
                 <x-text-input id="course_name" name="course_name" type="text" class="mt-1 block w-3/4"
                     placeholder="{{ __('Course Name') }}" />
-                <x-input-error-ajax class="input-error course_name" />
+                <x-input-error :messages="$errors->addCourse->get('course_name')" />
             </div>
             <div class="mt-6">
                 <x-input-label for="credit_hour" value="{{ __('Credit Hour') }}" />
                 <x-text-input id="credit_hour" name="credit_hour" type="text" class="mt-1 block w-3/4"
                     placeholder="{{ __('Credit Hour') }}" />
-                <x-input-error-ajax class="input-error credit_hour" />
+                <x-input-error :messages="$errors->addCourse->get('credit_hour')" />
             </div>
 
             <div class="mt-6 flex justify-end">
@@ -88,12 +94,4 @@
             </div>
         </form>
     </x-modal>
-
-    @push('scripts')
-        <script src="../assets/main.js"></script>
-        <script>
-            deleteItemAJAX();
-            createItemAJAX();
-        </script>
-    @endpush
 </x-app-layout>
