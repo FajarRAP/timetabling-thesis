@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Timetable;
 use App\Models\TimetableEntry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 
 class TimetableEntryController extends Controller
 {
@@ -13,9 +14,20 @@ class TimetableEntryController extends Controller
      */
     public function index(Timetable $timetable)
     {
+        $timetableEntries = TimetableEntry::where('timetable_id', $timetable->id)->get();
+        $groupByRoomClass = $timetableEntries
+            ->groupBy(fn(TimetableEntry $item) => $item->lectureSlot->roomClass->room_class)
+            ->sortKeys();
+        $sorted = $groupByRoomClass
+            ->map(fn(Collection $item) => $item->sortBy([
+                fn(TimetableEntry $first, TimetableEntry $second) => $first->lectureSlot->day->id <=> $second->lectureSlot->day->id,
+                fn(TimetableEntry $first, TimetableEntry $second) => $first->lectureSlot->timeSlot->start_at <=> $second->lectureSlot->timeSlot->start_at,
+            ]));
+
         return view('timetable-entry', [
             'timetable' => $timetable,
-            'timetable_entries' => TimetableEntry::where('timetable_id', $timetable->id)->get()
+            'timetable_entries' => $timetableEntries,
+            'sorted' => $sorted,
         ]);
     }
 
@@ -30,33 +42,23 @@ class TimetableEntryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, GeneticAlgorithmController $controller)
+    public function store(Timetable $timetable, GeneticAlgorithmController $controller)
     {
-        $timetableId = $request->input('timetable_id');
-
         $result = $controller->generate();
         $fitnessScore = $result['population']['fitness_score'];
         $chromosome = collect($result['population']['chromosome']);
-        $mappedChromosome = $chromosome->map(fn(array $item, int $key) => [
-            'timetable_id' => $timetableId,
+        $mappedChromosome = $chromosome->map(fn(array $item) => [
+            'timetable_id' => $timetable->id,
             'lecture_id' => $item['lecture']['id'],
             'lecture_slot_id' => $item['lecture_slot']['id'],
         ])->values();
 
-        $timetable = Timetable::find($timetableId);
         $timetable->fitness_score = $fitnessScore;
         $timetable->save();
 
         $mappedChromosome->each(fn(array $item) => TimetableEntry::create($item));
 
-        return response()->json([
-            'message' => 'Successful',
-            'data' => [
-                'fitness_score' => $fitnessScore,
-                'chromosome' => $chromosome,
-                'mapped_chromosome' => $mappedChromosome,
-            ],
-        ], 201);
+        return redirect(route('timetable'))->with('success', 'Generate Timetable Entries Successful');
     }
 
     /**
