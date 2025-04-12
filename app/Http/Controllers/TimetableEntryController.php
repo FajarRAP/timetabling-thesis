@@ -42,11 +42,24 @@ class TimetableEntryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Timetable $timetable, GeneticAlgorithmController $controller)
+    public function store(Request $request, Timetable $timetable, GeneticAlgorithmController $controller)
     {
-        $result = $controller->generate();
+        $validated = $request->validateWithBag('generateEntries', [
+            'max_generation' => ['nullable', 'integer', 'gt:1'],
+            'population_size' => ['nullable', 'integer', 'gt:1'],
+            'mutation_rate' => ['nullable', 'numeric', 'between:0,1'],
+        ]);
+
+        $maxGeneration = $validated['max_generation'] ?? 1;
+        $populationSize = $validated['population_size'] ?? 5;
+        $mutationRate = $validated['mutation_rate'] ?? .2;
+
+        $result = $controller->generate($populationSize, $maxGeneration, $mutationRate);
+
         $fitnessScore = $result['population']['fitness_score'];
         $chromosome = collect($result['population']['chromosome']);
+        $executionTimes = $result['execution_times'];
+
         $mappedChromosome = $chromosome->map(fn(array $item) => [
             'timetable_id' => $timetable->id,
             'lecture_id' => $item['lecture']['id'],
@@ -54,6 +67,10 @@ class TimetableEntryController extends Controller
         ])->values();
 
         $timetable->fitness_score = $fitnessScore;
+        $timetable->max_generation = $maxGeneration;
+        $timetable->population_size = $populationSize;
+        $timetable->mutation_rate = $mutationRate;
+        $timetable->execution_times = $executionTimes;
         $timetable->save();
 
         $mappedChromosome->each(fn(array $item) => TimetableEntry::create($item));
