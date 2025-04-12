@@ -26,6 +26,9 @@
                                     {{ __('Credit Hour') }}
                                 </th>
                                 <th scope="col" class="px-6 py-3">
+                                    {{ __('Is Has Practicum') }}
+                                </th>
+                                <th scope="col" class="px-6 py-3">
                                     {{ __('Actions') }}
                                 </th>
                             </tr>
@@ -41,6 +44,13 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         {{ $course->credit_hour }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <x-text-input type="checkbox" class="checked:text-indigo-500" :disabled="true"
+                                            :checked="$course->is_has_practicum" />
+                                        {{-- <input type="checkbox"
+                                            class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm checked:text-indigo-500"
+                                            disabled @checked($course->is_has_practicum)> --}}
                                     </td>
                                     <td class="px-6 py-4">
                                         <x-danger-button x-data

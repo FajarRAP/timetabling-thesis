@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('course_name');
             $table->integer('credit_hour');
+            $table->boolean('is_has_practicum')->default(false);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
