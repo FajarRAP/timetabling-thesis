@@ -14,20 +14,23 @@ class TimetableEntryController extends Controller
      */
     public function index(Timetable $timetable)
     {
+        $sortByDay = fn(TimetableEntry $first, TimetableEntry $second)
+        => $first->lectureSlot->day->id <=> $second->lectureSlot->day->id;
+
+        $sortByTimeSlot = fn(TimetableEntry $first, TimetableEntry $second)
+        => $first->lectureSlot->timeSlot->start_at <=> $second->lectureSlot->timeSlot->start_at;
+
+        $mapSort = fn(Collection $item) => $item->sortBy([$sortByDay, $sortByTimeSlot]);
+
         $timetableEntries = TimetableEntry::where('timetable_id', $timetable->id)->get();
         $groupByRoomClass = $timetableEntries
             ->groupBy(fn(TimetableEntry $item) => $item->lectureSlot->roomClass->room_class)
             ->sortKeys();
-        $sorted = $groupByRoomClass
-            ->map(fn(Collection $item) => $item->sortBy([
-                fn(TimetableEntry $first, TimetableEntry $second) => $first->lectureSlot->day->id <=> $second->lectureSlot->day->id,
-                fn(TimetableEntry $first, TimetableEntry $second) => $first->lectureSlot->timeSlot->start_at <=> $second->lectureSlot->timeSlot->start_at,
-            ]));
+        $sorted = $groupByRoomClass->map($mapSort);
 
         return view('timetable-entry', [
             'timetable' => $timetable,
-            'timetable_entries' => $timetableEntries,
-            'sorted' => $sorted,
+            'timetable_entries_by_room_class' => $sorted,
         ]);
     }
 
