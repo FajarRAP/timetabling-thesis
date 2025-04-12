@@ -7,7 +7,6 @@ use App\Http\Resources\LectureSlotResource;
 use App\Models\Lecture;
 use App\Models\LectureSlot;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Collection;
 
@@ -30,12 +29,12 @@ use Illuminate\Support\Collection;
 
 class GeneticAlgorithmController extends Controller
 {
-    public function generate()
+    public function generate(int $populationSize = 5, int $maxGeneration = 1, float $mutationRate = .2)
     {
-        set_time_limit(3600);
+        set_time_limit(36000);
 
-        $populationSize = 15;
-        $maxGeneration = 100;
+        $startTime = microtime(true);
+
         $population = $this->initializePopulation($populationSize, true);
         $chromosomeLength = count($population[0]['chromosome']);
 
@@ -49,7 +48,7 @@ class GeneticAlgorithmController extends Controller
 
             $bestChromosome = $this->chromosomeSelection($population);
             $offsprings = $this->chromosomeCrossover($bestChromosome);
-            $mutatedOffsprings = $this->mutateChromosome($offsprings, .5);
+            $mutatedOffsprings = $this->mutateChromosome($offsprings, $mutationRate);
 
             for ($i = 0; $i < count($mutatedOffsprings); $i++) {
                 $conflictCount = $this->evaluateChromosome(collect($mutatedOffsprings[$i]['chromosome']));
@@ -61,15 +60,12 @@ class GeneticAlgorithmController extends Controller
             $population = $this->regeneration($population, $mutatedOffsprings);
         }
 
-        return response()->json([
-            'message' => 'Successful',
-            'population_size' => $populationSize,
-            'population' => $population->map(fn(Collection $value) => collect([
-                'conflict_count' => $value['conflict_count'],
-                'fitness_score' => $value['fitness_score'],
-            ]))->values(),
-            'best_fitness_score' => $population->max('fitness_score'),
-        ]);
+        $endTime = microtime(true);
+
+        return [
+            'population' => $population->first(),
+            'execution_times' => $endTime - $startTime,
+        ];
     }
 
     private function initializeChromosome(bool $modelResource = false): Collection
@@ -109,7 +105,7 @@ class GeneticAlgorithmController extends Controller
 
         for ($i = 0; $i < $populationSize; $i++) {
             $chromosome = $this->initializeChromosome($modelResource);
-            $mappedChromosome = $this->mapChromosome($chromosome);
+            $mappedChromosome = $this->mapChromosome($chromosome->values());
             $population->push(collect([])->put('chromosome', $mappedChromosome));
         }
 
@@ -131,8 +127,7 @@ class GeneticAlgorithmController extends Controller
                 $isSameDay = $value['lecture_slot']['day'] == $v['lecture_slot']['day'];
                 $isSameLecture = $key == $k;
 
-                if ($isSameLecture)
-                    continue;
+                if ($isSameLecture) continue;
 
                 if ($isSameRoomClass && $isSameDay) {
                     if ($start_at_first < $end_at_second && $end_at_first > $start_at_second) {
@@ -230,18 +225,16 @@ class GeneticAlgorithmController extends Controller
         [
             'id' => $key,
             'lecture' => [
+                'id' => $value['lecture']->id,
                 'course_name' => $value['lecture']->course,
                 'class' => $value['lecture']->class,
-                'lecturer_name' => $value['lecture']->lecturer->lecturer_name,
+                'lecturer_name' => $value['lecture']->lecturer,
             ],
             'lecture_slot' => [
-                'lecture_slot_id' => $value['lecture_slot']->id,
-                'day' => $value['lecture_slot']->day->day,
-                'time_slot' => [
-                    'start_at' => $value['lecture_slot']->timeSlot->start_at,
-                    'end_at' => $value['lecture_slot']->timeSlot->end_at
-                ],
-                'room_class' => $value['lecture_slot']->roomClass->room_class,
+                'id' => $value['lecture_slot']->id,
+                'day' => $value['lecture_slot']->day,
+                'time_slot' => $value['lecture_slot']->timeSlot,
+                'room_class' => $value['lecture_slot']->roomClass,
             ],
         ];
         $filterTwoCreditScoreCourse = fn(array $item, int $key) => $item['lecture']['course_name']['credit_hour'] === 2;
