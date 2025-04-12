@@ -7,8 +7,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 flex flex-col gap-4">
-            <x-primary-button class="self-end" x-data=""
-                x-on:click.prevent="$dispatch('open-modal', 'add-timetable')">
+            <x-primary-button class="self-end" x-data x-on:click.prevent="$dispatch('open-modal', 'add-timetable')">
                 {{ __('Add Timetable') }}
             </x-primary-button>
 
@@ -45,35 +44,40 @@
                                     </td>
                                     <td class="px-6 py-4 flex flex-col gap-2">
                                         @if (!$timetable->fitness_score)
-                                            <x-primary-button data-timetableId="{{ $timetable->id }}"
-                                                data-url="{{ route('timetable-entry.store') }}"
-                                                class="generate-timetable {{ $timetable->id }} w-1/2 justify-center">
-                                                {{ __('Generate') }}
-                                            </x-primary-button>
+                                            <form action="{{ route('timetable-entry.store', $timetable) }}"
+                                                method="POST">
+                                                @csrf
+                                                @method('POST')
+                                                <x-primary-button class="sm:w-1/2 justify-center">
+                                                    {{ __('Generate') }}
+                                                </x-primary-button>
+                                            </form>
                                         @endif
                                         <a href="{{ route('timetable-entry', ['timetable' => $timetable]) }}">
-                                            <x-primary-button class="w-1/2 justify-center">
+                                            <x-primary-button class="sm:w-1/2 justify-center">
                                                 {{ __('Show entries') }}
                                             </x-primary-button>
                                         </a>
-                                        <x-danger-button
-                                            data-url="{{ route('timetable.destroy', ['timetable' => $timetable]) }}"
-                                            class="delete-item-button w-1/2 justify-center">
+                                        <x-danger-button class="sm:w-1/2 justify-center" x-data
+                                            x-on:click="$dispatch('open-modal', 'delete-timetable-{{ $timetable->id }}')">
                                             {{ __('Delete') }}
                                         </x-danger-button>
+                                        <x-delete-data-modal :action="route('timetable.destroy', $timetable)"
+                                            name="delete-timetable-{{ $timetable->id }}" />
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
-
                     </table>
+
+                    {{ $timetables->links('components.pagination.pagination') }}
                 </div>
             </div>
         </div>
     </div>
 
-    <x-modal name="add-timetable">
-        <form id="form" method="POST" action="{{ route('timetable.store') }}" class="p-6">
+    <x-modal name="add-timetable" focusable>
+        <form method="POST" action="{{ route('timetable.store') }}" class="p-6">
             @csrf
             @method('POST')
 
@@ -98,35 +102,4 @@
             </div>
         </form>
     </x-modal>
-
-    @push('scripts')
-        <script src="../assets/main.js"></script>
-        <script>
-            createItemAJAX();
-            deleteItemAJAX();
-
-            const generateTimetableButtons = document.querySelectorAll('.generate-timetable');
-            generateTimetableButtons.forEach(function(button) {
-                button.addEventListener('click', async function(event) {
-                    const timetableId = this.getAttribute('data-timetableId');
-                    const url = this.getAttribute('data-url');
-
-                    const response = await fetch(url, {
-                        body: JSON.stringify({
-                            timetable_id: timetableId
-                        }),
-                        headers: {
-                            "Content-Type": "application/json",
-                            "X-CSRF-TOKEN": document.querySelector(
-                                'meta[name="csrf-token"]'
-                            ).content,
-                        },
-                        method: 'POST'
-                    });
-
-                    if (response.ok) window.location.reload();
-                });
-            });
-        </script>
-    @endpush
 </x-app-layout>

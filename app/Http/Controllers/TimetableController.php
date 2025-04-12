@@ -13,7 +13,7 @@ class TimetableController extends Controller
     public function index()
     {
         return view('timetable', [
-            'timetables' => Timetable::all(),
+            'timetables' => Timetable::paginate(5),
         ]);
     }
 
@@ -30,12 +30,9 @@ class TimetableController extends Controller
      */
     public function store(Request $request)
     {
-        $timetable = Timetable::create();
+        Timetable::create();
 
-        return response()->json([
-            'message' => 'Successful',
-            'data' => $timetable,
-        ], 201);
+        return redirect(route('timetable'))->with('success', 'Add Data Successful');
     }
 
     /**
@@ -69,9 +66,6 @@ class TimetableController extends Controller
     {
         $timetable->delete();
 
-        return response()->json([
-            'message' => 'Successful',
-            'data' => $timetable,
-        ]);
+        return redirect(route('timetable'))->with('success', __('Delete Data Successful'));
     }
 }
