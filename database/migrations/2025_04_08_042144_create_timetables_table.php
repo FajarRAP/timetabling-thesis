@@ -14,6 +14,10 @@ return new class extends Migration
         Schema::create('timetables', function (Blueprint $table) {
             $table->id();
             $table->float('fitness_score')->nullable();
+            $table->integer('max_generation')->nullable();
+            $table->integer('population_size')->nullable();
+            $table->float('mutation_rate')->nullable();
+            $table->float('execution_times')->nullable();
             $table->timestamps();
         });
     }
