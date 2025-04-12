@@ -61,7 +61,7 @@
     </div>
 
     <x-modal name="add-course" :show="$errors->addCourse->isNotEmpty()" focusable>
-        <form id="form" method="POST" action="{{ route('course.store') }}" class="p-6">
+        <form method="POST" action="{{ route('course.store') }}" class="p-6">
             @csrf
             @method('POST')
 
