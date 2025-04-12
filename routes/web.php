@@ -40,9 +40,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/timetable/{timetable}', 'destroy')->name('timetable.destroy');
         });
         Route::controller(TimetableEntryController::class)->group(function () {
-            Route::get('/timetable-entry/{timetable}', 'index')->name('timetable-entry');
-            Route::post('/timetable-entry', 'store')->name('timetable-entry.store');
-            Route::delete('/timetable-entry/{timetableEntry}', 'destroy')->name('timetable-entry.destroy');
+            Route::get('/timetable/{timetable}/entry', 'index')->name('timetable-entry');
+            Route::post('/timetable/{timetable}/entry', 'store')->name('timetable-entry.store');
         });
     });
 });
