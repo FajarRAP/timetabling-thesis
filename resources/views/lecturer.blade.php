@@ -42,8 +42,13 @@
                                     <td class="px-6 py-4">
                                         {{ $lecturer->lecturer_name }}
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <x-danger-button x-data
+                                    <td class="px-6 py-4 flex flex-col gap-2">
+                                        <a href="{{ route('lecturer-constraint', $lecturer) }}">
+                                            <x-primary-button class="sm:w-1/2 justify-center">
+                                                {{ __('Add Constraints') }}
+                                            </x-primary-button>
+                                        </a>
+                                        <x-danger-button class="sm:w-1/2 justify-center" x-data
                                             x-on:click="$dispatch('open-modal', 'delete-lecturer-{{ $lecturer->id }}')">
                                             {{ __('Delete') }}
                                         </x-danger-button>
@@ -75,7 +80,7 @@
             <div class="mt-6">
                 <x-input-label for="lecturer_name" value="{{ __('Lecturer Name') }}" />
                 <x-text-input id="lecturer_name" name="lecturer_name" type="text" class="mt-1 block w-3/4"
-                    placeholder="{{ __('lecturer Name') }}" />
+                    placeholder="{{ __('Lecturer Name') }}" />
                 <x-input-error :messages="$errors->addLecturer->get('lecturer_name')" />
             </div>
 

@@ -122,7 +122,7 @@
                                                 </form>
                                             </x-modal>
                                         @endif
-                                        <a href="{{ route('timetable-entry', ['timetable' => $timetable]) }}">
+                                        <a href="{{ route('timetable-entry', $timetable) }}">
                                             <x-primary-button class="w-full justify-center">
                                                 {{ __('Show entries') }}
                                             </x-primary-button>

@@ -75,24 +75,24 @@
             <div class="mt-6">
                 <x-input-label for="course_id" value="{{ __('Select Course') }}" />
                 <x-select-input name="course_id" id="course_id" class="mt-1 block w-3/4">
-                    <x-slot:options>
+                    <x-slot name="options">
                         <option value="" disabled selected>{{ __('Select Course') }}</option>
                         @foreach ($courses as $course)
                             <option value="{{ $course->id }}">{{ $course->course_name }}</option>
                         @endforeach
-                    </x-slot:options>
+                    </x-slot name="options">
                 </x-select-input>
                 <x-input-error :messages="$errors->addLecture->get('course_id')" />
             </div>
             <div class="mt-6">
                 <x-input-label for="lecturer_id" value="{{ __('Select Lecturer') }}" />
                 <x-select-input name="lecturer_id" id="lecturer_id" class="mt-1 block w-3/4">
-                    <x-slot:options>
+                    <x-slot name="options">
                         <option value="" disabled selected>{{ __('Select Lecturer') }}</option>
                         @foreach ($lecturers as $lecturer)
                             <option value="{{ $lecturer->id }}">{{ $lecturer->lecturer_name }}</option>
                         @endforeach
-                    </x-slot:options>
+                    </x-slot name="options">
                 </x-select-input>
                 <x-input-error :messages="$errors->addLecture->get('lecturer_id')" />
             </div>
