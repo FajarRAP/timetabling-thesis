@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LectureController;
+use App\Http\Controllers\LecturerConstraintController;
 use App\Http\Controllers\LecturerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomClassController;
@@ -28,6 +29,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/lecturer', 'index')->name('lecturer');
             Route::post('/lecturer', 'store')->name('lecturer.store');
             Route::delete('/lecturer/{lecturer}', 'destroy')->name('lecturer.destroy');
+        });
+        Route::controller(LecturerConstraintController::class)->group(function () {
+            Route::get('lecturer/{lecturer}/constraint', 'index')->name('lecturer-constraint');
+            Route::post('lecturer/{lecturer}/constraint', 'store')->name('lecturer-constraint.store');
         });
         Route::controller(LectureController::class)->group(function () {
             Route::get('/lecture', 'index')->name('lecture');

@@ -21,7 +21,7 @@
                     <x-nav-link :href="route('lecture')" :active="request()->routeIs('lecture')">
                         {{ __('Lecture') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('lecturer')" :active="request()->routeIs('lecturer')">
+                    <x-nav-link :href="route('lecturer')" :active="request()->routeIs('lecturer') || request()->routeIs('lecturer-constraint')">
                         {{ __('Lecturer') }}
                     </x-nav-link>
                     <x-nav-link :href="route('room-class')" :active="request()->routeIs('room-class')">
