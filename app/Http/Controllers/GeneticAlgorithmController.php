@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Resources\LectureResource;
 use App\Http\Resources\LectureSlotResource;
 use App\Models\Lecture;
+use App\Models\Lecturer;
+use App\Models\LecturerConstraint;
 use App\Models\LectureSlot;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -39,11 +41,23 @@ class GeneticAlgorithmController extends Controller
         $chromosomeLength = count($population[0]['chromosome']);
 
         for ($generation = 0; $generation < $maxGeneration; $generation++) {
+            $constrainedLecturers = LecturerConstraint::all();
+            $constrainedLecturerIds = $constrainedLecturers
+                ->unique('lecturer_id')
+                ->map(fn($item) => $item['lecturer_id'])
+                ->values();
+
             for ($i = 0; $i < $populationSize; $i++) {
-                $conflictCount = $this->evaluateChromosome(collect($population[$i]['chromosome']));
+                $hardViolations = $this->evaluateChromosome(collect($population[$i]['chromosome']));
+                $softViolations = $this->evaluateSoftConstraints(
+                    $constrainedLecturers,
+                    $constrainedLecturerIds,
+                    collect($population[$i]['chromosome'])
+                );
                 $population[$i]
-                    ->put('conflict_count', $conflictCount)
-                    ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $conflictCount));
+                    ->put('hard_violations', $hardViolations)
+                    ->put('soft_violations', $softViolations)
+                    ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $hardViolations));
             }
 
             $bestChromosome = $this->chromosomeSelection($population);
@@ -51,10 +65,16 @@ class GeneticAlgorithmController extends Controller
             $mutatedOffsprings = $this->mutateChromosome($offsprings, $mutationRate);
 
             for ($i = 0; $i < count($mutatedOffsprings); $i++) {
-                $conflictCount = $this->evaluateChromosome(collect($mutatedOffsprings[$i]['chromosome']));
-                $mutatedOffsprings[$i]
-                    ->put('conflict_count', $conflictCount)
-                    ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $conflictCount));
+                $hardViolations = $this->evaluateChromosome(collect($population[$i]['chromosome']));
+                $softViolations = $this->evaluateSoftConstraints(
+                    $constrainedLecturers,
+                    $constrainedLecturerIds,
+                    collect($population[$i]['chromosome'])
+                );
+                $population[$i]
+                    ->put('hard_violations', $hardViolations)
+                    ->put('soft_violations', $softViolations)
+                    ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $hardViolations));
             }
 
             $population = $this->regeneration($population, $mutatedOffsprings);
@@ -114,7 +134,7 @@ class GeneticAlgorithmController extends Controller
 
     private function evaluateChromosome(Collection $population): int
     {
-        $conflictCount = 0;
+        $hardConstraintsViolationCount = 0;
 
         foreach ($population as $key => $value) {
             $start_at_first = Carbon::parse($value['lecture_slot']['time_slot']['start_at']);
@@ -131,13 +151,34 @@ class GeneticAlgorithmController extends Controller
 
                 if ($isSameRoomClass && $isSameDay) {
                     if ($start_at_first < $end_at_second && $end_at_first > $start_at_second) {
-                        $conflictCount++;
+                        $hardConstraintsViolationCount++;
                     }
                 }
             }
         }
 
-        return $conflictCount / 2;
+        return $hardConstraintsViolationCount / 2;
+    }
+
+    private function evaluateSoftConstraints(Collection $constrainedLecturers, Collection $constrainedLecturerIds, Collection $chromosome): int
+    {
+        $softViolations = 0;
+        foreach ($constrainedLecturerIds as $lecturerId) {
+            $lectureSlots = $chromosome
+                ->filter(fn($item) => $item['lecture']['lecturer']['id'] == $lecturerId)
+                ->values();
+            $lecturerConstraints = $constrainedLecturers
+                ->where('lecturer_id', $lecturerId)
+                ->values();
+
+            for ($j = 0; $j < $lectureSlots->count(); $j++) {
+                if ($lectureSlots[$j]['lecture_slot']['day']['id'] == $lecturerConstraints[$j]['day_id']) {
+                    $softViolations++;
+                }
+            }
+        }
+
+        return $softViolations;
     }
 
     private function chromosomeSelection(Collection $population): Collection
@@ -226,9 +267,9 @@ class GeneticAlgorithmController extends Controller
             'id' => $key,
             'lecture' => [
                 'id' => $value['lecture']->id,
-                'course_name' => $value['lecture']->course,
+                'course' => $value['lecture']->course,
                 'class' => $value['lecture']->class,
-                'lecturer_name' => $value['lecture']->lecturer,
+                'lecturer' => $value['lecture']->lecturer,
             ],
             'lecture_slot' => [
                 'id' => $value['lecture_slot']->id,
@@ -237,11 +278,10 @@ class GeneticAlgorithmController extends Controller
                 'room_class' => $value['lecture_slot']->roomClass,
             ],
         ];
-        $filterTwoCreditScoreCourse = fn(array $item, int $key) => $item['lecture']['course_name']['credit_hour'] === 2;
+        // $filterTwoCreditScoreCourse = fn(array $item, int $key) => $item['lecture']['course']['credit_hour'] === 2;
 
         return $chromosome->map($mapChromosome)->values();
     }
-
     private function getRandomNumber(): float
     {
         return mt_rand() / mt_getrandmax();
