@@ -96,37 +96,8 @@ class GeneticAlgorithm
 
         $endTime = microtime(true);
 
-        $violations = collect([]);
-        $chromosome = $population->first()['chromosome']->values();
-
-        for ($i = 0; $i < $chromosome->count(); $i++) {
-            $startAtFirst = Carbon::parse($chromosome[$i]['lecture_slot']['time_slot']['start_at']);
-            $endAtFirst = Carbon::parse($chromosome[$i]['lecture_slot']['time_slot']['end_at']);
-
-
-            for ($j = $i + 1; $j < $chromosome->count(); $j++) {
-                $startAtSecond = Carbon::parse($chromosome[$j]['lecture_slot']['time_slot']['start_at']);
-                $endAtSecond = Carbon::parse($chromosome[$j]['lecture_slot']['time_slot']['end_at']);
-                // $isSameRoomClass = $chromosome[$i]['lecture_slot']['room_class'] == $chromosome[$j]['lecture_slot']['room_class'];
-                $isSameRoomClass = $chromosome[$i]['lecture_slot']['room_class']['id'] == $chromosome[$j]['lecture_slot']['room_class']['id'];
-                // $isSameDay = $chromosome[$i]['lecture_slot']['day'] == $chromosome[$j]['lecture_slot']['day'];
-                $isSameDay = $chromosome[$i]['lecture_slot']['day']['id'] == $chromosome[$j]['lecture_slot']['day']['id'];
-
-                if ($isSameRoomClass && $isSameDay) {
-                    if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
-                        $violations->push([
-                            'first' => $chromosome[$i],
-                            'second' => $chromosome[$j],
-                        ]);
-                    }
-                }
-            }
-        }
-
         return [
             'population' => $population->first(),
-            'violations' => $violations,
-            'violation_count' => $violations->count(),
             'execution_times' => $endTime - $startTime,
         ];
     }
@@ -178,12 +149,19 @@ class GeneticAlgorithm
             for ($j = $i + 1; $j < $chromosome->count(); $j++) {
                 $startAtSecond = Carbon::parse($chromosome[$j]['lecture_slot']['time_slot']['start_at']);
                 $endAtSecond = Carbon::parse($chromosome[$j]['lecture_slot']['time_slot']['end_at']);
-                // $isSameRoomClass = $chromosome[$i]['lecture_slot']['room_class'] == $chromosome[$j]['lecture_slot']['room_class'];
                 $isSameRoomClass = $chromosome[$i]['lecture_slot']['room_class']['id'] == $chromosome[$j]['lecture_slot']['room_class']['id'];
-                // $isSameDay = $chromosome[$i]['lecture_slot']['day'] == $chromosome[$j]['lecture_slot']['day'];
                 $isSameDay = $chromosome[$i]['lecture_slot']['day']['id'] == $chromosome[$j]['lecture_slot']['day']['id'];
+                $isSameLecturer = $chromosome[$i]['lecture']['lecturer']['id'] == $chromosome[$j]['lecture']['lecturer']['id'];
 
+                // Bentrok ruang kelas (room class) dan waktu (time slot)
                 if ($isSameRoomClass && $isSameDay) {
+                    if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
+                        $hardViolations++;
+                    }
+                }
+
+                // Bentrok dosen (lecturer) dan waktu (time slot)
+                if ($isSameLecturer && $isSameDay) {
                     if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
                         $hardViolations++;
                     }
@@ -256,14 +234,10 @@ class GeneticAlgorithm
                 $randomLectureSlot = $lectureSlots->random();
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['id'] = $randomLectureSlot->id;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['day']['id'] = $randomLectureSlot->day->id;
-                // $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['day']['day'] = $randomLectureSlot->day->day;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['id'] = $randomLectureSlot->timeSlot->id;
-                // $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['time_slot'] = $randomLectureSlot->timeSlot->time_slot;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['start_at'] = $randomLectureSlot->timeSlot->start_at;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['end_at'] = $randomLectureSlot->timeSlot->end_at;
-                // $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['credit_hour'] = $randomLectureSlot->timeSlot->credit_hour;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['room_class']['id'] = $randomLectureSlot->roomClass->id;
-                // $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['room_class']['room_class'] = $randomLectureSlot->roomClass->room_class;
             }
 
             $mutatedOffsprings->push($arrOffspring);
@@ -302,25 +276,20 @@ class GeneticAlgorithm
             'id' => $key,
             'lecture' => [
                 'id' => $value['lecture']->id,
-                // 'course' => $value['lecture']->course,
-                // 'class' => $value['lecture']->class,
-                // 'lecturer' => $value['lecture']->lecturer,
                 'lecturer' => [
                     'id' => $value['lecture']->lecturer->id,
                 ],
             ],
             'lecture_slot' => [
                 'id' => $value['lecture_slot']->id,
-                // 'day' => $value['lecture_slot']->day,
+
                 'day' => [
                     'id' => $value['lecture_slot']->day->id,
                 ],
-                // 'time_slot' => $value['lecture_slot']->timeSlot,
                 'time_slot' => [
                     'start_at' => $value['lecture_slot']->timeSlot->start_at,
                     'end_at' => $value['lecture_slot']->timeSlot->end_at,
                 ],
-                // 'room_class' => $value['lecture_slot']->roomClass,
                 'room_class' => [
                     'id' => $value['lecture_slot']->roomClass->id,
                 ],
