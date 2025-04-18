@@ -17,7 +17,9 @@ return new class extends Migration
             $table->integer('max_generation')->nullable();
             $table->integer('population_size')->nullable();
             $table->float('mutation_rate')->nullable();
-            $table->float('execution_times')->nullable();
+            $table->float('hard_violations')->nullable();
+            $table->integer('soft_violations')->nullable();
+            $table->integer('execution_times')->nullable();
             $table->timestamps();
         });
     }
