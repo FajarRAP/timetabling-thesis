@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Supports;
 
 use App\Http\Resources\LectureResource;
 use App\Http\Resources\LectureSlotResource;
@@ -13,7 +13,12 @@ use Illuminate\Support\Collection;
 
 /**
  * PR BROWW:
- * - konfliknya diitung 2x, padahal sama hanya tertukar posisi index saja, e.g.: ada di excel -> sementara dibagi 2 dulu, awoakwoak
+ * - konfliknya diitung 2x, padahal sama hanya tertukar posisi index saja, e.g.: ada di excel -> sementara dibagi 2 dulu, awoakwoak -> solved
+ * 
+ * Definisi Bentrok:
+ * - Matakuliah: Ada matakuliah (course) yang bentrok dengan matakuliah (course) lain pada ruang kelas (room class) dan waktu (time slot) yang sama. Contoh: Matakuliah A di ruang kelas 1 pada jam 8-10, dan matakuliah B di ruang kelas 1 pada jam 8-10 juga
+ * - Dosen: Ada dosen (lecturer) yang bentrok dengan dirinya sendiri pada ruang kelas (room class) berbeda, namun waktu yang sama. Contoh: Dosen A mengajar matakuliah A di ruang kelas 1 pada jam 8-10, dan mengajar matakuliah B di ruang kelas 2 pada jam 8-10 juga 
+ * 
  *
  * Problems Solved:
  * - Jadi ainx tanggal 17 Maret 2025 mengalami masalah ketika mau bikin timetablenya secara semi deterministik, ternyata masalahnya itu terletak di lecture slot. Pastikan lecture slotnya itu tersedia, contoh kalo misalnya total dari course yang 3 sks itu ada 200 (($course->credit_hour == 3)->count()), maka lecture slot untuk 3 sks harus lebih dari itu (antara ruangan/time slot yang diperbanyak, karena hari ga mungkin).
@@ -29,13 +34,20 @@ use Illuminate\Support\Collection;
  * 
  */
 
-class GeneticAlgorithmController extends Controller
+class GeneticAlgorithm
 {
-    public function generate(int $populationSize = 5, int $maxGeneration = 1, float $mutationRate = .2)
+    public function __construct(
+        public int $populationSize = 5,
+        public int $maxGeneration = 1,
+        public float $mutationRate = .2,
+    ) {}
+
+    public function generate()
     {
+        set_time_limit(36000);
         $startTime = microtime(true);
 
-        $population = $this->initializePopulation($populationSize);
+        $population = $this->initializePopulation();
         $chromosomeLength = $population[0]['chromosome']->count();
         $lectureSlots = LectureSlot::all();
         $constrainedLecturers = LecturerConstraint::all();
@@ -44,8 +56,8 @@ class GeneticAlgorithmController extends Controller
             ->map(fn($item) => $item['lecturer_id'])
             ->values();
 
-        for ($generation = 0; $generation < $maxGeneration; $generation++) {
-            for ($i = 0; $i < $populationSize; $i++) {
+        for ($generation = 0; $generation < $this->maxGeneration; $generation++) {
+            for ($i = 0; $i < $this->populationSize; $i++) {
                 $hardViolations = $this->evaluateChromosome($population[$i]['chromosome']->values());
                 $softViolations = $this->evaluateSoftConstraints(
                     $constrainedLecturers,
@@ -64,7 +76,6 @@ class GeneticAlgorithmController extends Controller
             $mutatedOffsprings = $this->mutateChromosome(
                 $lectureSlots,
                 $offsprings->values(),
-                $mutationRate,
             );
 
             for ($i = 0; $i < $mutatedOffsprings->count(); $i++) {
@@ -85,8 +96,37 @@ class GeneticAlgorithmController extends Controller
 
         $endTime = microtime(true);
 
+        $violations = collect([]);
+        $chromosome = $population->first()['chromosome']->values();
+
+        for ($i = 0; $i < $chromosome->count(); $i++) {
+            $startAtFirst = Carbon::parse($chromosome[$i]['lecture_slot']['time_slot']['start_at']);
+            $endAtFirst = Carbon::parse($chromosome[$i]['lecture_slot']['time_slot']['end_at']);
+
+
+            for ($j = $i + 1; $j < $chromosome->count(); $j++) {
+                $startAtSecond = Carbon::parse($chromosome[$j]['lecture_slot']['time_slot']['start_at']);
+                $endAtSecond = Carbon::parse($chromosome[$j]['lecture_slot']['time_slot']['end_at']);
+                // $isSameRoomClass = $chromosome[$i]['lecture_slot']['room_class'] == $chromosome[$j]['lecture_slot']['room_class'];
+                $isSameRoomClass = $chromosome[$i]['lecture_slot']['room_class']['id'] == $chromosome[$j]['lecture_slot']['room_class']['id'];
+                // $isSameDay = $chromosome[$i]['lecture_slot']['day'] == $chromosome[$j]['lecture_slot']['day'];
+                $isSameDay = $chromosome[$i]['lecture_slot']['day']['id'] == $chromosome[$j]['lecture_slot']['day']['id'];
+
+                if ($isSameRoomClass && $isSameDay) {
+                    if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
+                        $violations->push([
+                            'first' => $chromosome[$i],
+                            'second' => $chromosome[$j],
+                        ]);
+                    }
+                }
+            }
+        }
+
         return [
             'population' => $population->first(),
+            'violations' => $violations,
+            'violation_count' => $violations->count(),
             'execution_times' => $endTime - $startTime,
         ];
     }
@@ -113,11 +153,11 @@ class GeneticAlgorithmController extends Controller
         return $timetable;
     }
 
-    private function initializePopulation(int $populationSize): Collection
+    private function initializePopulation(): Collection
     {
         $population = collect([]);
 
-        for ($i = 0; $i < $populationSize; $i++) {
+        for ($i = 0; $i < $this->populationSize; $i++) {
             $chromosome = $this->initializeChromosome();
             $mappedChromosome = $this->mapChromosome($chromosome->values());
             $population->push(collect([])->put('chromosome', $mappedChromosome));
@@ -128,7 +168,7 @@ class GeneticAlgorithmController extends Controller
 
     private function evaluateChromosome(Collection $chromosome): int
     {
-        $hardConstraintsViolationCount = 0;
+        $hardViolations = 0;
 
         for ($i = 0; $i < $chromosome->count(); $i++) {
             $startAtFirst = Carbon::parse($chromosome[$i]['lecture_slot']['time_slot']['start_at']);
@@ -138,48 +178,23 @@ class GeneticAlgorithmController extends Controller
             for ($j = $i + 1; $j < $chromosome->count(); $j++) {
                 $startAtSecond = Carbon::parse($chromosome[$j]['lecture_slot']['time_slot']['start_at']);
                 $endAtSecond = Carbon::parse($chromosome[$j]['lecture_slot']['time_slot']['end_at']);
-                $isSameRoomClass = $chromosome[$i]['lecture_slot']['room_class'] == $chromosome[$j]['lecture_slot']['room_class'];
-                $isSameDay = $chromosome[$i]['lecture_slot']['day'] == $chromosome[$j]['lecture_slot']['day'];
-
-                // $isSameLecture = $key == $k;
-
-                // if ($isSameLecture) continue;
+                // $isSameRoomClass = $chromosome[$i]['lecture_slot']['room_class'] == $chromosome[$j]['lecture_slot']['room_class'];
+                $isSameRoomClass = $chromosome[$i]['lecture_slot']['room_class']['id'] == $chromosome[$j]['lecture_slot']['room_class']['id'];
+                // $isSameDay = $chromosome[$i]['lecture_slot']['day'] == $chromosome[$j]['lecture_slot']['day'];
+                $isSameDay = $chromosome[$i]['lecture_slot']['day']['id'] == $chromosome[$j]['lecture_slot']['day']['id'];
 
                 if ($isSameRoomClass && $isSameDay) {
                     if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
-                        $hardConstraintsViolationCount++;
+                        $hardViolations++;
                     }
                 }
             }
         }
 
-        return $hardConstraintsViolationCount;
-
-        // foreach ($population as $key => $value) {
-        //     $start_at_first = Carbon::parse($value['lecture_slot']['time_slot']['start_at']);
-        //     $end_at_first = Carbon::parse($value['lecture_slot']['time_slot']['end_at']);
-
-        //     foreach ($population as $k => $v) {
-        //         $start_at_second = Carbon::parse($v['lecture_slot']['time_slot']['start_at']);
-        //         $end_at_second = Carbon::parse($v['lecture_slot']['time_slot']['end_at']);
-        //         $isSameRoomClass = $value['lecture_slot']['room_class'] == $v['lecture_slot']['room_class'];
-        //         $isSameDay = $value['lecture_slot']['day'] == $v['lecture_slot']['day'];
-        //         $isSameLecture = $key == $k;
-
-        //         if ($isSameLecture) continue;
-
-        //         if ($isSameRoomClass && $isSameDay) {
-        //             if ($start_at_first < $end_at_second && $end_at_first > $start_at_second) {
-        //                 $hardConstraintsViolationCount++;
-        //             }
-        //         }
-        //     }
-        // }
-
-        // return $hardConstraintsViolationCount / 2;
+        return $hardViolations;
     }
 
-    // Only Day, need to be improved with time
+    // Only day, need to be improved with time start at and end at
     private function evaluateSoftConstraints(Collection $constrainedLecturers, Collection $constrainedLecturerIds, Collection $chromosome): int
     {
         $softViolations = 0;
@@ -228,7 +243,7 @@ class GeneticAlgorithmController extends Controller
         return $offsprings;
     }
 
-    private function mutateChromosome(Collection $lectureSlots, Collection $offsprings, float $mutationRate = 0.2): Collection
+    private function mutateChromosome(Collection $lectureSlots, Collection $offsprings): Collection
     {
         $mutatedOffsprings = collect([]);
 
@@ -236,19 +251,19 @@ class GeneticAlgorithmController extends Controller
             $randomNumber = $this->getRandomNumber();
             $arrOffspring = $offspring->toArray();
 
-            if ($randomNumber < $mutationRate) {
+            if ($randomNumber < $this->mutationRate) {
                 $randomIndex = rand(0, $offspring['chromosome']->count() - 1);
                 $randomLectureSlot = $lectureSlots->random();
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['id'] = $randomLectureSlot->id;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['day']['id'] = $randomLectureSlot->day->id;
-                $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['day']['day'] = $randomLectureSlot->day->day;
+                // $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['day']['day'] = $randomLectureSlot->day->day;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['id'] = $randomLectureSlot->timeSlot->id;
-                $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['time_slot'] = $randomLectureSlot->timeSlot->time_slot;
+                // $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['time_slot'] = $randomLectureSlot->timeSlot->time_slot;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['start_at'] = $randomLectureSlot->timeSlot->start_at;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['end_at'] = $randomLectureSlot->timeSlot->end_at;
-                $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['credit_hour'] = $randomLectureSlot->timeSlot->credit_hour;
+                // $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['credit_hour'] = $randomLectureSlot->timeSlot->credit_hour;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['room_class']['id'] = $randomLectureSlot->roomClass->id;
-                $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['room_class']['room_class'] = $randomLectureSlot->roomClass->room_class;
+                // $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['room_class']['room_class'] = $randomLectureSlot->roomClass->room_class;
             }
 
             $mutatedOffsprings->push($arrOffspring);
@@ -264,7 +279,6 @@ class GeneticAlgorithmController extends Controller
             ->push($mutatedOffsprings[1]);
         $sorted = $population->sortByDesc('fitness_score')->values();
         $sorted->pop(2);
-
 
         return collect($sorted->all());
     }
@@ -288,15 +302,28 @@ class GeneticAlgorithmController extends Controller
             'id' => $key,
             'lecture' => [
                 'id' => $value['lecture']->id,
-                'course' => $value['lecture']->course,
-                'class' => $value['lecture']->class,
-                'lecturer' => $value['lecture']->lecturer,
+                // 'course' => $value['lecture']->course,
+                // 'class' => $value['lecture']->class,
+                // 'lecturer' => $value['lecture']->lecturer,
+                'lecturer' => [
+                    'id' => $value['lecture']->lecturer->id,
+                ],
             ],
             'lecture_slot' => [
                 'id' => $value['lecture_slot']->id,
-                'day' => $value['lecture_slot']->day,
-                'time_slot' => $value['lecture_slot']->timeSlot,
-                'room_class' => $value['lecture_slot']->roomClass,
+                // 'day' => $value['lecture_slot']->day,
+                'day' => [
+                    'id' => $value['lecture_slot']->day->id,
+                ],
+                // 'time_slot' => $value['lecture_slot']->timeSlot,
+                'time_slot' => [
+                    'start_at' => $value['lecture_slot']->timeSlot->start_at,
+                    'end_at' => $value['lecture_slot']->timeSlot->end_at,
+                ],
+                // 'room_class' => $value['lecture_slot']->roomClass,
+                'room_class' => [
+                    'id' => $value['lecture_slot']->roomClass->id,
+                ],
             ],
         ];
         $filterTwoCreditScoreCourse = fn(array $item) => $item['lecture']['course']['credit_hour'] === 2;
