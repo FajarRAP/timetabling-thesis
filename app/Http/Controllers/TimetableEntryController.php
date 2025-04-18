@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GenerateTimetable;
 use App\Models\Timetable;
 use App\Models\TimetableEntry;
 use Illuminate\Http\Request;
@@ -16,10 +17,8 @@ class TimetableEntryController extends Controller
     {
         $sortByDay = fn(TimetableEntry $first, TimetableEntry $second)
         => $first->lectureSlot->day->id <=> $second->lectureSlot->day->id;
-
         $sortByTimeSlot = fn(TimetableEntry $first, TimetableEntry $second)
         => $first->lectureSlot->timeSlot->start_at <=> $second->lectureSlot->timeSlot->start_at;
-
         $mapSort = fn(Collection $item) => $item->sortBy([$sortByDay, $sortByTimeSlot]);
 
         $timetableEntries = TimetableEntry::where('timetable_id', $timetable->id)->get();
@@ -45,7 +44,7 @@ class TimetableEntryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, Timetable $timetable, GeneticAlgorithmController $controller)
+    public function store(Request $request, Timetable $timetable)
     {
         $validated = $request->validateWithBag('generateEntries', [
             'max_generation' => ['nullable', 'integer', 'gt:1'],
@@ -53,30 +52,13 @@ class TimetableEntryController extends Controller
             'mutation_rate' => ['nullable', 'numeric', 'between:0,1'],
         ]);
 
-        $maxGeneration = $validated['max_generation'] ?? 1;
-        $populationSize = $validated['population_size'] ?? 5;
-        $mutationRate = $validated['mutation_rate'] ?? .2;
+        $params = [
+            'max_generation' => $validated['max_generation'] ?? 1,
+            'population_size' => $validated['population_size'] ?? 5,
+            'mutation_rate' => $validated['mutation_rate'] ?? .2,
+        ];
 
-        $result = $controller->generate($populationSize, $maxGeneration, $mutationRate);
-
-        $fitnessScore = $result['population']['fitness_score'];
-        $chromosome = collect($result['population']['chromosome']);
-        $executionTimes = $result['execution_times'];
-
-        $mappedChromosome = $chromosome->map(fn(array $item) => [
-            'timetable_id' => $timetable->id,
-            'lecture_id' => $item['lecture']['id'],
-            'lecture_slot_id' => $item['lecture_slot']['id'],
-        ])->values();
-
-        $timetable->fitness_score = $fitnessScore;
-        $timetable->max_generation = $maxGeneration;
-        $timetable->population_size = $populationSize;
-        $timetable->mutation_rate = $mutationRate;
-        $timetable->execution_times = $executionTimes;
-        $timetable->save();
-
-        $mappedChromosome->each(fn(array $item) => TimetableEntry::create($item));
+        GenerateTimetable::dispatch($params, $timetable);
 
         return redirect(route('timetable'))->with('success', 'Generate Timetable Entries Successful');
     }
