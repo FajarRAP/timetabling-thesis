@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Http\Controllers\GeneticAlgorithmController;
 use App\Models\Timetable;
 use App\Models\TimetableEntry;
+use App\Supports\GeneticAlgorithm;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -23,13 +23,14 @@ class GenerateTimetable implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(GeneticAlgorithmController $controller): void
+    public function handle(): void
     {
-        $result = $controller->generate(
+        $ga = new GeneticAlgorithm(
             $this->params['population_size'],
             $this->params['max_generation'],
             $this->params['mutation_rate'],
         );
+        $result = $ga->generate();
 
         $fitnessScore = $result['population']['fitness_score'];
         $chromosome = collect($result['population']['chromosome']);
