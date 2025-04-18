@@ -35,6 +35,12 @@
                                     {{ __('Execution Times (Second)') }}
                                 </th>
                                 <th scope="col" class="px-6 py-3">
+                                    {{ __('Hard Violations') }}
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    {{ __('Soft Violations') }}
+                                </th>
+                                <th scope="col" class="px-6 py-3">
                                     {{ __('Created At') }}
                                 </th>
                                 <th scope="col" class="px-6 py-3">
@@ -62,6 +68,12 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         {{ $timetable->execution_times ?? __('Not yet generated') }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $timetable->hard_violations ?? __('Not yet generated') }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $timetable->soft_violations ?? __('Not yet generated') }}
                                     </td>
                                     <td class="px-6 py-4">
                                         {{ $timetable->created_at }}
