@@ -32,7 +32,7 @@ class TimetableController extends Controller
     {
         Timetable::create();
 
-        return redirect(route('timetable'))->with('success', 'Add Data Successful');
+        return back()->with('success', 'Add Data Successful');
     }
 
     /**
@@ -66,6 +66,6 @@ class TimetableController extends Controller
     {
         $timetable->delete();
 
-        return redirect(route('timetable'))->with('success', __('Delete Data Successful'));
+        return back()->with('success', __('Delete Data Successful'));
     }
 }
