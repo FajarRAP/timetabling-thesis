@@ -172,7 +172,6 @@ class GeneticAlgorithm
         return $hardViolations;
     }
 
-    // Only day, need to be improved with time start at and end at
     private function evaluateSoftConstraints(Collection $constrainedLecturers, Collection $constrainedLecturerIds, Collection $chromosome): int
     {
         $softViolations = 0;
@@ -186,7 +185,25 @@ class GeneticAlgorithm
                 ->values();
 
             for ($j = 0; $j < $lectureSlots->count(); $j++) {
-                if ($lectureSlots[$j]['lecture_slot']['day']['id'] == $lecturerConstraints[$j]['day_id']) {
+                $lectureSlotDayId = $lectureSlots[$j]['lecture_slot']['day']['id'];
+                $lectureSlotStartAt = Carbon::parse($lectureSlots[$j]['lecture_slot']['time_slot']['start_at']);
+                $lectureSlotEndAt = Carbon::parse($lectureSlots[$j]['lecture_slot']['time_slot']['end_at']);
+                $lecturerConstraintDayId = $lecturerConstraints[$j]['day_id'];
+                $lecturerConstraintStartAt = Carbon::parse($lecturerConstraints[$j]['start_at']);
+                $lecturerConstraintEndAt = Carbon::parse($lecturerConstraints[$j]['end_at']);
+
+                // Pelanggaran preferensi dosen (lecturer) untuk hari (day)
+                if ($lectureSlotDayId == $lecturerConstraintDayId) {
+                    $softViolations++;
+                }
+
+                // Pelanggaran preferensi dosen (lecturer) untuk waktu perkuliahan dimulai (start at)
+                if ($lectureSlotStartAt < $lecturerConstraintStartAt && $lecturerConstraints[$j]['start_at'] != null) {
+                    $softViolations++;
+                }
+
+                // Pelanggaran preferensi dosen (lecturer) untuk batas akhir waktu perkuliahan (end at)
+                if ($lectureSlotEndAt > $lecturerConstraintEndAt && $lecturerConstraints[$j]['end_at'] != null) {
                     $softViolations++;
                 }
             }
