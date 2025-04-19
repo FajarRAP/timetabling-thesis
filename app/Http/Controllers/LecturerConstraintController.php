@@ -6,7 +6,6 @@ use App\Models\Day;
 use App\Models\Lecturer;
 use App\Models\LecturerConstraint;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class LecturerConstraintController extends Controller
 {
@@ -42,13 +41,15 @@ class LecturerConstraintController extends Controller
                 'lecturer_id' => $item['lecturer_id'],
                 'lecture_id' => $item['lecture_id'],
                 'day_id' => $item['day_id'] ?? null,
+                'start_at' => $item['start_at'] ?? null,
+                'end_at' => $item['end_at'] ?? null,
             ]
         );
 
         $mappedConstraints->each(fn($item)
         => LecturerConstraint::updateOrCreate(
             ['lecturer_id' => $item['lecturer_id'], 'lecture_id' => $item['lecture_id']],
-            ['day_id' => $item['day_id']]
+            ['day_id' => $item['day_id'], 'start_at' => $item['start_at'], 'end_at' => $item['end_at']]
         ));
 
         return redirect(route('lecturer'))->with('success', __('Add Constraints Successful'));
