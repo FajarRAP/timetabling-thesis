@@ -11,8 +11,8 @@ class LecturerConstraint extends Model
         'lecturer_id',
         'lecture_id',
         'day_id',
-        // 'start_at',
-        // 'end_at',
+        'start_at',
+        'end_at',
     ];
 
     public function lecturer(): BelongsTo
