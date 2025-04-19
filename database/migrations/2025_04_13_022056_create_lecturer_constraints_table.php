@@ -28,8 +28,8 @@ return new class extends Migration
                 ->constrained()
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
-            // $table->time('start_at')->nullable();
-            // $table->time('end_at')->nullable();
+            $table->time('start_at')->nullable();
+            $table->time('end_at')->nullable();
             $table->timestamps();
         });
     }
