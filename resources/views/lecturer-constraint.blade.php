@@ -10,7 +10,7 @@
             <form action="{{ route('lecturer-constraint.store', $lecturer) }}" method="POST" class="flex flex-col gap-4">
                 @csrf
                 @method('POST')
-                {{-- x-data x-on:click.prevent="$dispatch('open-modal', 'add-constraint')" --}}
+
                 <x-primary-button class="self-end">
                     {{ __('Apply Constraint') }}
                 </x-primary-button>
@@ -51,6 +51,8 @@
                                     @php
                                         $lecture = $constraints->isNotEmpty() ? $item->lecture : $item;
                                         $dayId = $constraints->isNotEmpty() ? $item->day_id : null;
+                                        $startAt = $constraints->isNotEmpty() ? $item->start_at : null;
+                                        $endAt = $constraints->isNotEmpty() ? $item->end_at : null;
                                     @endphp
 
                                     <x-text-input type="hidden" name="constraints[{{ $index }}][lecturer_id]"
@@ -73,10 +75,12 @@
                                             {{ $lecture->class }}
                                         </td>
                                         <td class="px-6 py-4">
-
+                                            <x-text-input type="time"
+                                                name="constraints[{{ $index }}][start_at]" :value="$startAt" />
                                         </td>
                                         <td class="px-6 py-4">
-
+                                            <x-text-input type="time"
+                                                name="constraints[{{ $index }}][end_at]" :value="$endAt" />
                                         </td>
                                         <td class="px-6 py-4">
                                             <x-select-input name="constraints[{{ $index }}][day_id]"
@@ -95,7 +99,6 @@
                                         </td>
                                     </tr>
                                 @endforeach
-
                             </tbody>
                         </table>
                     </div>
@@ -103,25 +106,4 @@
             </form>
         </div>
     </div>
-
-    <x-modal name="add-constraint" focusable>
-        <form method="POST" action="{{ route('lecturer-constraint.store', $lecturer) }}" class="p-6">
-            @csrf
-            @method('POST')
-
-            <h2 class="text-lg font-medium text-gray-900">
-                {{ __('Are you sure want to apply this constraints?') }}
-            </h2>
-
-            <div class="mt-6 flex justify-end">
-                <x-secondary-button x-on:click="$dispatch('close')">
-                    {{ __('Cancel') }}
-                </x-secondary-button>
-
-                <x-primary-button class="ms-3">
-                    {{ __('Apply') }}
-                </x-primary-button>
-            </div>
-        </form>
-    </x-modal>
 </x-app-layout>
