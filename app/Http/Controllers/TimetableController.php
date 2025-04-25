@@ -13,7 +13,7 @@ class TimetableController extends Controller
     public function index()
     {
         return view('timetable', [
-            'timetables' => Timetable::paginate(5),
+            'timetables' => Timetable::paginate(10),
         ]);
     }
 

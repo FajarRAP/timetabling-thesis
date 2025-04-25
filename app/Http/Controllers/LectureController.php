@@ -16,7 +16,7 @@ class LectureController extends Controller
     public function index()
     {
         return view('lecture', [
-            'lectures' => Lecture::paginate(5),
+            'lectures' => Lecture::paginate(10),
             'courses' => Course::all(),
             'lecturers' => Lecturer::all(),
         ]);

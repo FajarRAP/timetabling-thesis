@@ -13,7 +13,7 @@ class RoomClassController extends Controller
     public function index()
     {
         return view('room-class', [
-            'roomClasses' => RoomClass::paginate(5),
+            'roomClasses' => RoomClass::paginate(10),
         ]);
     }
 
