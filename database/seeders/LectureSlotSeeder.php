@@ -21,13 +21,30 @@ class LectureSlotSeeder extends Seeder
         $timeSlotCount = TimeSlot::count();
         $datas = [];
 
-        for ($i = 0; $i < $dayCount; $i++) { // Active Days (days)
-            for ($j = 0; $j < $roomClassCount; $j++) { // Total Available Class (room_classes)
-                for ($k = 0; $k < $timeSlotCount; $k++) { // Time Slot (time_slots)
+        for ($i = 1; $i <= $dayCount; $i++) { // Active Days (days)
+            for ($j = 1; $j <= $roomClassCount; $j++) { // Total Available Class (room_classes)
+                for ($k = 1; $k <= $timeSlotCount; $k++) { // Time Slot (time_slots)
+                    // Hari Jumat
+                    if ($i == 5) {
+                        // Jam 08.45-12.10
+                        switch ($k) {
+                            case 2:
+                            case 3:
+                            case 4:
+                            case 5:
+                            case 6:
+                            case 14:
+                            case 15:
+                            case 16:
+                            case 17:
+                                continue 2;
+                        }
+                    }
+
                     $datas[] = [
-                        'day_id' => $i + 1,
-                        'time_slot_id' => $k + 1,
-                        'room_class_id' => $j + 1,
+                        'day_id' => $i,
+                        'time_slot_id' => $k,
+                        'room_class_id' => $j,
                     ];
                 }
             }
