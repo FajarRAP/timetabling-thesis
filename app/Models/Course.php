@@ -12,6 +12,8 @@ class Course extends Model
         'course_name',
         'credit_hour',
         'is_has_practicum',
+        'is_online',
+        'is_even_semester',
     ];
 
     protected function creditHour(): Attribute
