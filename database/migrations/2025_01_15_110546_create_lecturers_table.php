@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('lecturers', function (Blueprint $table) {
             $table->id();
-            $table->string('lecturer_number')->unique();
+            $table->string('lecturer_number')->unique()->nullable();
             $table->string('lecturer_name');
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();

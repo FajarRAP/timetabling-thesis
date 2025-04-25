@@ -28,7 +28,7 @@ class LecturerSeeder extends Seeder
             ['lecturer_number' => '0019087601', 'lecturer_name' => 'Nur Rochmah DPA, S.T., M.Kom'],
             ['lecturer_number' => '0511098401', 'lecturer_name' => 'Lisna Zahrotun, S.T., M.Cs'],
             ['lecturer_number' => '0509038402', 'lecturer_name' => 'Guntur Maulana Z., B.Sc., M.Kom'],
-            ['lecturer_number' => '-', 'lecturer_name' => 'Sheraton Pawestri, S.Kom., M.Cs.'],
+            ['lecturer_number' => null, 'lecturer_name' => 'Sheraton Pawestri, S.Kom., M.Cs.'],
             ['lecturer_number' => '0521127303', 'lecturer_name' => 'Taufiq Ismail, S.T., M.Cs'],
             ['lecturer_number' => '0523068801', 'lecturer_name' => 'Supriyanto, S.T., M.T'],
             ['lecturer_number' => '0015118001', 'lecturer_name' => 'Fiftin Noviyanto, S.T., M.Cs'],
@@ -47,6 +47,8 @@ class LecturerSeeder extends Seeder
             ['lecturer_number' => '0505038301', 'lecturer_name' => 'Andri Pranolo, S.Kom., M.Cs., Ph.D.'],
             ['lecturer_number' => '0530077601', 'lecturer_name' => 'Dewi Soyusiawaty, S.T., M.T'],
             ['lecturer_number' => '0506016701', 'lecturer_name' => 'Mushlihudin, S.T., M.T.'],
+            ['lecturer_number' => null, 'lecturer_name' => 'LPSI'],
+            ['lecturer_number' => null, 'lecturer_name' => 'LPP'],
         ]);
     }
 }

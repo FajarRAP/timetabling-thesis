@@ -37,7 +37,7 @@
                                         {{ $loop->index + 1 }}
                                     </th>
                                     <td class="px-6 py-4">
-                                        {{ $lecturer->lecturer_number }}
+                                        {{ $lecturer->lecturer_number ?? '-' }}
                                     </td>
                                     <td class="px-6 py-4">
                                         {{ $lecturer->lecturer_name }}
