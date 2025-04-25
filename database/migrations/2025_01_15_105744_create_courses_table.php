@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('course_name');
             $table->integer('credit_hour');
             $table->boolean('is_has_practicum')->default(false);
+            $table->boolean('is_online')->default(false);
+            $table->boolean('is_even_semester')->default(false);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });

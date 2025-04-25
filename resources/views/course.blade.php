@@ -29,6 +29,12 @@
                                     {{ __('Is Has Practicum') }}
                                 </th>
                                 <th scope="col" class="px-6 py-3">
+                                    {{ __('Is Online') }}
+                                </th>
+                                <th scope="col" class="px-6 py-3">
+                                    {{ __('Is Even Semester') }}
+                                </th>
+                                <th scope="col" class="px-6 py-3">
                                     {{ __('Actions') }}
                                 </th>
                             </tr>
@@ -48,6 +54,14 @@
                                     <td class="px-6 py-4">
                                         <x-text-input type="checkbox" class="checked:text-indigo-500" :disabled="true"
                                             :checked="$course->is_has_practicum" />
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <x-text-input type="checkbox" class="checked:text-indigo-500" :disabled="true"
+                                            :checked="$course->is_online" />
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <x-text-input type="checkbox" class="checked:text-indigo-500" :disabled="true"
+                                            :checked="$course->is_even_semester" />
                                     </td>
                                     <td class="px-6 py-4">
                                         <x-danger-button x-data
