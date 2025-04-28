@@ -39,6 +39,10 @@ class GeneticAlgorithm
     private Collection $lectureSlots;
     private Collection $lectures;
     private Collection $constrainedLecturers;
+    private Collection $onlineTwoCreditLectureSlots;
+    private Collection $onlineThreeCreditLectureSlots;
+    private Collection $offlineTwoCreditLectureSlots;
+    private Collection $offlineThreeCreditLectureSlots;
 
     public function __construct(
         public int $populationSize = 5,
@@ -48,6 +52,12 @@ class GeneticAlgorithm
         $this->lectureSlots = LectureSlot::all();
         $this->lectures = Lecture::all();
         $this->constrainedLecturers = LecturerConstraint::all();
+        [
+            $this->onlineTwoCreditLectureSlots,
+            $this->onlineThreeCreditLectureSlots,
+            $this->offlineTwoCreditLectureSlots,
+            $this->offlineThreeCreditLectureSlots
+        ] = $this->splitLectureSlots(LectureSlotResource::collection($this->lectureSlots)->values());
     }
 
     public function generate()
@@ -55,19 +65,8 @@ class GeneticAlgorithm
         set_time_limit(36000);
 
         $startTime = microtime(true);
-        [
-            $onlineTwoCreditLectureSlots,
-            $onlineThreeCreditLectureSlots,
-            $offlineTwoCreditLectureSlots,
-            $offlineThreeCreditLectureSlots,
-        ] = $this->splitLectureSlots(LectureSlotResource::collection($this->lectureSlots)->values());
 
-        $population = $this->initializePopulation(
-            $onlineTwoCreditLectureSlots,
-            $onlineThreeCreditLectureSlots,
-            $offlineTwoCreditLectureSlots,
-            $offlineThreeCreditLectureSlots,
-        );
+        $population = $this->initializePopulation();
         $chromosomeLength = $population[0]['chromosome']->count();
 
         $constrainedLecturerIds = $this->constrainedLecturers
@@ -92,10 +91,7 @@ class GeneticAlgorithm
 
             $bestChromosome = $this->chromosomeSelection($population->values());
             $offsprings = $this->chromosomeCrossover($bestChromosome->values());
-            $mutatedOffsprings = $this->mutateChromosome(
-                $this->lectureSlots,
-                $offsprings->values(),
-            );
+            $mutatedOffsprings = $this->mutateChromosome($offsprings->values());
 
             for ($i = 0; $i < $mutatedOffsprings->count(); $i++) {
                 $hardViolations = $this->evaluateChromosome($mutatedOffsprings[$i]['chromosome']->values());
@@ -110,25 +106,22 @@ class GeneticAlgorithm
                     ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $hardViolations));
             }
 
-            $population = $this->regeneration($population->values(), $mutatedOffsprings->values());
+            $population = $this->regeneration(
+                $population->values(),
+                $mutatedOffsprings->values(),
+            );
         }
 
         $endTime = microtime(true);
 
-
         return [
             'population' => $population->first(),
-            'hard_violations' => $hardViolations,
             'execution_times' => $endTime - $startTime,
         ];
     }
 
-    private function initializeChromosome(
-        Collection $onlineTwoCreditLectureSlots,
-        Collection $onlineThreeCreditLectureSlots,
-        Collection $offlineTwoCreditLectureSlots,
-        Collection $offlineThreeCreditLectureSlots,
-    ): Collection {
+    private function initializeChromosome(): Collection
+    {
         $lecturesCount = $this->lectures->count();
         $timetable = collect([]);
 
@@ -141,27 +134,18 @@ class GeneticAlgorithm
             $isOnline = $this->lectures[$i]->course->is_online;
 
             $timetable->push($isOnline ?
-                ($isTwoCredit ? $data($onlineTwoCreditLectureSlots->random()) : $data($onlineThreeCreditLectureSlots->random())) : ($isTwoCredit ? $data($offlineTwoCreditLectureSlots->random()) : $data($offlineThreeCreditLectureSlots->random())));
+                ($isTwoCredit ? $data($this->onlineTwoCreditLectureSlots->random()) : $data($this->onlineThreeCreditLectureSlots->random())) : ($isTwoCredit ? $data($this->offlineTwoCreditLectureSlots->random()) : $data($this->offlineThreeCreditLectureSlots->random())));
         }
 
         return $timetable;
     }
 
-    private function initializePopulation(
-        Collection $onlineTwoCreditLectureSlots,
-        Collection $onlineThreeCreditLectureSlots,
-        Collection $offlineTwoCreditLectureSlots,
-        Collection $offlineThreeCreditLectureSlots,
-    ): Collection {
+    private function initializePopulation(): Collection
+    {
         $population = collect([]);
 
         for ($i = 0; $i < $this->populationSize; $i++) {
-            $chromosome = $this->initializeChromosome(
-                $onlineTwoCreditLectureSlots,
-                $onlineThreeCreditLectureSlots,
-                $offlineTwoCreditLectureSlots,
-                $offlineThreeCreditLectureSlots,
-            );
+            $chromosome = $this->initializeChromosome();
             $mappedChromosome = $this->mapChromosome($chromosome->values());
             $population->push(collect([])->put('chromosome', $mappedChromosome));
         }
@@ -171,7 +155,6 @@ class GeneticAlgorithm
 
     private function evaluateChromosome(Collection $chromosome): int
     {
-
         $hardViolations = 0;
 
         for ($i = 0; $i < $chromosome->count(); $i++) {
@@ -185,7 +168,6 @@ class GeneticAlgorithm
                 $isSameRoomClass = $chromosome[$i]['lecture_slot']['room_class']['id'] == $chromosome[$j]['lecture_slot']['room_class']['id'];
                 $isOnlineClass = $chromosome[$i]['lecture_slot']['room_class']['id'] == 1;
                 $isCertainLecturer = $chromosome[$i]['lecture']['lecturer']['id'] != 34 && $chromosome[$i]['lecture']['lecturer']['id'] != 35;
-
                 $isSameDay = $chromosome[$i]['lecture_slot']['day']['id'] == $chromosome[$j]['lecture_slot']['day']['id'];
                 $isSameLecturer = $chromosome[$i]['lecture']['lecturer']['id'] == $chromosome[$j]['lecture']['lecturer']['id'];
 
@@ -276,7 +258,7 @@ class GeneticAlgorithm
         return $offsprings;
     }
 
-    private function mutateChromosome(Collection $lectureSlots, Collection $offsprings): Collection
+    private function mutateChromosome(Collection $offsprings): Collection
     {
         $mutatedOffsprings = collect([]);
 
@@ -286,10 +268,12 @@ class GeneticAlgorithm
 
             if ($randomNumber < $this->mutationRate) {
                 $randomIndex = rand(0, $offspring['chromosome']->count() - 1);
-                $randomLectureSlot = $lectureSlots->random();
+                $randomLectureSlot = $this->randomizedLectureSlot($arrOffspring['chromosome'][$randomIndex]);
+
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['id'] = $randomLectureSlot->id;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['day']['id'] = $randomLectureSlot->day->id;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['id'] = $randomLectureSlot->timeSlot->id;
+                $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['credit_hour'] = $randomLectureSlot->timeSlot->credit_hour;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['start_at'] = $randomLectureSlot->timeSlot->start_at;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['time_slot']['end_at'] = $randomLectureSlot->timeSlot->end_at;
                 $arrOffspring['chromosome'][$randomIndex]['lecture_slot']['room_class']['id'] = $randomLectureSlot->roomClass->id;
@@ -347,6 +331,7 @@ class GeneticAlgorithm
                     'id' => $value['lecture_slot']->day->id,
                 ],
                 'time_slot' => [
+                    'credit_hour' => $value['lecture_slot']->timeSlot->credit_hour,
                     'start_at' => $value['lecture_slot']->timeSlot->start_at,
                     'end_at' => $value['lecture_slot']->timeSlot->end_at,
                 ],
@@ -368,5 +353,31 @@ class GeneticAlgorithm
     private function getRandomNumber(): float
     {
         return mt_rand() / mt_getrandmax();
+    }
+
+    private function randomizedLectureSlot(array $gene): LectureSlotResource
+    {
+        // Online Class
+        if ($gene['lecture_slot']['room_class']['id'] === 1) {
+            // 2 Credit Hour Time
+            if ($gene['lecture_slot']['time_slot']['credit_hour'] === 2) {
+                return $this->onlineTwoCreditLectureSlots->random();
+            }
+            // 3 Credit Hour Time
+            else {
+                return $this->onlineThreeCreditLectureSlots->random();
+            }
+        }
+        // Offline class
+        else {
+            // 2 Credit Hour Time
+            if ($gene['lecture_slot']['time_slot']['credit_hour'] === 2) {
+                return $this->offlineTwoCreditLectureSlots->random();
+            }
+            // 3 Credit Hour Time
+            else {
+                return $this->offlineThreeCreditLectureSlots->random();
+            }
+        }
     }
 }
