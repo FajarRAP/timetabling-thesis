@@ -24,22 +24,22 @@ class LectureSlotSeeder extends Seeder
         for ($i = 1; $i <= $dayCount; $i++) { // Active Days (days)
             for ($j = 1; $j <= $roomClassCount; $j++) { // Total Available Class (room_classes)
                 for ($k = 1; $k <= $timeSlotCount; $k++) { // Time Slot (time_slots)
-                    // Hari Jumat
-                    if ($i == 5) {
-                        // Jam 08.45-12.10
-                        switch ($k) {
-                            case 2:
-                            case 3:
-                            case 4:
-                            case 5:
-                            case 6:
-                            case 14:
-                            case 15:
-                            case 16:
-                            case 17:
-                                continue 2;
-                        }
-                    }
+                    // // Hari Jumat
+                    // if ($i == 5) {
+                    //     // Jam 08.45-12.10
+                    //     switch ($k) {
+                    //         case 2:
+                    //         case 3:
+                    //         case 4:
+                    //         case 5:
+                    //         case 6:
+                    //         case 14:
+                    //         case 15:
+                    //         case 16:
+                    //         case 17:
+                    //             continue 2;
+                    //     }
+                    // }
 
                     $datas[] = [
                         'day_id' => $i,

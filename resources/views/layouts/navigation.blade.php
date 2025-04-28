@@ -18,6 +18,9 @@
                     <x-nav-link :href="route('timetable')" :active="request()->routeIs('timetable') || request()->routeIs('timetable-entry')">
                         {{ __('Timetable') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('lecture-slot')" :active="request()->routeIs('lecture-slot')">
+                        {{ __('Lecture Slot') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('lecture')" :active="request()->routeIs('lecture')">
                         {{ __('Lecture') }}
                     </x-nav-link>
@@ -96,10 +99,13 @@
             <x-responsive-nav-link :href="route('timetable')" :active="request()->routeIs('timetable') || request()->routeIs('timetable-entry')">
                 {{ __('Timetable') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('lecture-slot')" :active="request()->routeIs('lecture-slot')">
+                {{ __('Lecture Slot') }}
+            </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('lecture')" :active="request()->routeIs('lecture')">
                 {{ __('Lecture') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('lecturer')" :active="request()->routeIs('lecturer')">
+            <x-responsive-nav-link :href="route('lecturer')" :active="request()->routeIs('lecturer') || request()->routeIs('lecturer-constraint')">
                 {{ __('Lecturer') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('room-class')" :active="request()->routeIs('room-class')">
