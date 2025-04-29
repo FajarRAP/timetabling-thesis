@@ -4,6 +4,7 @@ use App\Http\Controllers\CourseController;
 use App\Http\Controllers\LectureController;
 use App\Http\Controllers\LecturerConstraintController;
 use App\Http\Controllers\LecturerController;
+use App\Http\Controllers\LectureSlotConstraintController;
 use App\Http\Controllers\LectureSlotController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomClassController;
@@ -50,6 +51,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/timetable/{timetable}/entry', 'store')->name('timetable-entry.store');
         });
         Route::get('/lecture-slot', LectureSlotController::class)->name('lecture-slot');
+        Route::post('/lecture-slot/constraint', LectureSlotConstraintController::class)->name('lecture-slot.constraint');
     });
 });
 
