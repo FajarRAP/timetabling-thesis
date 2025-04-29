@@ -16,6 +16,7 @@ return new class extends Migration
             $table->integer('day_id');
             $table->integer('room_class_id');
             $table->integer('time_slot_id');
+            $table->boolean('is_excluded')->default(false);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
         });
