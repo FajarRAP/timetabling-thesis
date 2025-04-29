@@ -118,7 +118,7 @@ class TimeSlotSeeder extends Seeder
             ],
             [
                 'time_slot' => '12.30-15.05',
-                'start_at' => '12:15:00',
+                'start_at' => '12:30:00',
                 'end_at' => '15:05:00',
                 'credit_hour' => 3,
             ],
