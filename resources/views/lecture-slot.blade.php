@@ -56,7 +56,7 @@
                         </tbody>
                     </table>
 
-                    {{-- {{ $lecture_slots->links('components.pagination.pagination') }} --}}
+                    {{ $lecture_slots->links('components.pagination.pagination') }}
                 </div>
             </div>
         </div>

@@ -14,7 +14,10 @@ class LectureSlotController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $lectureSlots = LectureSlot::whereNull('lecture_slot_constraint_id')->get();
+        $perPage = $request->input('per_page', 10);
+        $lectureSlots = LectureSlot::whereNull('lecture_slot_constraint_id')
+            ->paginate($perPage)
+            ->appends(['per_page' => $perPage]);
 
         return view('lecture-slot', [
             'lecture_slots' => $lectureSlots,
