@@ -10,10 +10,12 @@ class TimetableController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = $request->input('per_page', 10);
+
         return view('timetable', [
-            'timetables' => Timetable::paginate(10),
+            'timetables' => Timetable::paginate(10)->appends(['per_page' => $perPage]),
         ]);
     }
 
