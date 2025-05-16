@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\GenerateTimetable;
+use App\Models\LecturerConstraint;
+use App\Models\LectureSlotConstraint;
 use App\Models\Timetable;
 use App\Models\TimetableEntry;
+use App\Models\TimetableUsedConstraint;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -62,6 +65,17 @@ class TimetableEntryController extends Controller
         ];
 
         GenerateTimetable::dispatch($params, $timetable);
+
+        $lectureSlotConstraints = LectureSlotConstraint::all();
+        $lecturerConstraints = LecturerConstraint::all();
+        $lectureSlotConstraints->each(fn($item) => TimetableUsedConstraint::create([
+            'timetable_id' => $timetable->id,
+            'lecture_slot_constraint_id' => $item->id,
+        ]));
+        $lecturerConstraints->each(fn($item) => TimetableUsedConstraint::create([
+            'timetable_id' => $timetable->id,
+            'lecturer_constraint_id' => $item->id,
+        ]));
 
         return redirect(route('timetable'))->with('success', 'Generate Timetable Entries Successful');
     }
