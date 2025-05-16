@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('lecture_slot_constraints', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('day_id')->constrained()
+            $table->foreignId('day_id')
+                ->constrained()
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
             $table->time('start_at');
