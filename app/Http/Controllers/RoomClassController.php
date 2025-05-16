@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Day;
+use App\Models\LectureSlot;
 use App\Models\RoomClass;
+use App\Models\TimeSlot;
 use Illuminate\Http\Request;
 
 class RoomClassController extends Controller
@@ -26,7 +29,21 @@ class RoomClassController extends Controller
             'room_class' => 'required',
         ]);
 
-        RoomClass::create($validated);
+        $roomClass = RoomClass::create($validated);
+
+        if ($roomClass) {
+            $days = Day::all();
+            $timeSlots = TimeSlot::all();
+            foreach ($days as $day) {
+                foreach ($timeSlots as $timeslot) {
+                    LectureSlot::create([
+                        'day_id' => $day->id,
+                        'time_slot_id' => $timeslot->id,
+                        'room_class_id' => $roomClass->id,
+                    ]);
+                }
+            }
+        }
 
         return redirect(route('room-class'))->with('success', __('Add Data Successful'));
     }
