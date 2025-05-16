@@ -23,4 +23,9 @@ class LectureSlot extends Model
     {
         return $this->belongsTo(RoomClass::class);
     }
+
+    public function timetableUsedConstraint()
+    {
+        return $this->hasMany(TimetableUsedConstraint::class);
+    }
 }

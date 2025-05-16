@@ -29,4 +29,9 @@ class LecturerConstraint extends Model
     {
         return $this->belongsTo(Day::class);
     }
+
+    public function timetableUsedConstraint()
+    {
+        return $this->hasMany(TimetableUsedConstraint::class);
+    }
 }

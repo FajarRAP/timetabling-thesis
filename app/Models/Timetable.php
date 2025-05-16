@@ -13,4 +13,9 @@ class Timetable extends Model
         'mutation_rate',
         'execution_times',
     ];
+
+    public function timetableUsedConstraints()
+    {
+        return $this->hasMany(TimetableUsedConstraint::class);
+    }
 }
