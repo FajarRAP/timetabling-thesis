@@ -19,42 +19,94 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                    <table class="w-full text-sm text-left rtl:text-right text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">
-                                    #
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    {{ __('Day') }}
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    {{ __('Time Slot') }}
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    {{ __('Room Class') }}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($lecture_slots as $lecture_slot)
-                                <tr class="bg-white border-b border-gray-200 hover:bg-gray-50">
-                                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                        {{ $loop->index + 1 }}
+                    <form action="{{ url()->current() }}" method="GET">
+                        <table class="w-full text-sm text-left rtl:text-right text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">
+                                        #
                                     </th>
-                                    <td class="px-6 py-4">
-                                        {{ $lecture_slot->day->day }}
+                                    <th scope="col" class="px-6 py-3">
+                                        {{ __('Day') }}
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
+                                        {{ __('Time Slot') }}
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
+                                        {{ __('Room Class') }}
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                        {{ __('Filter') }}</td>
+                                    <td class="px-6 py-3">
+                                        <x-select-input class="text-sm font-normal" name="day"
+                                            onchange="this.form.submit()">
+                                            <x-slot name="options">
+                                                <option value="" {{ request()->query('day') ? '' : 'selected' }}>
+                                                    {{ __('No Filter') }}</option>
+                                                @foreach ($days as $day)
+                                                    <option value="{{ $day->id }}"
+                                                        {{ request()->query('day') == $day->id ? 'selected' : '' }}>
+                                                        {{ $day->day }}
+                                                    </option>
+                                                @endforeach
+                                            </x-slot>
+                                        </x-select-input>
                                     </td>
-                                    <td class="px-6 py-4">
-                                        {{ $lecture_slot->timeSlot->time_slot }}
+                                    <td class="px-6 py-3">
+                                        <x-select-input class="text-sm font-normal" name="time_slot"
+                                            onchange="this.form.submit()">
+                                            <x-slot name="options">
+                                                <option value="" {{ request()->query('day') ? '' : 'selected' }}>
+                                                    {{ __('No Filter') }}</option>
+                                                @foreach ($time_slots as $time_slot)
+                                                    <option value="{{ $time_slot->id }}"
+                                                        {{ request()->query('time_slot') == $time_slot->id ? 'selected' : '' }}>
+                                                        {{ $time_slot->time_slot }}
+                                                    </option>
+                                                @endforeach
+                                            </x-slot>
+                                        </x-select-input>
                                     </td>
-                                    <td class="px-6 py-4 flex flex-col gap-2">
-                                        {{ $lecture_slot->roomClass->room_class }}
+                                    <td class="px-6 py-3">
+                                        <x-select-input class="text-sm font-normal" name="room_class"
+                                            onchange="this.form.submit()">
+                                            <x-slot name="options">
+                                                <option value="" {{ request()->query('day') ? '' : 'selected' }}>
+                                                    {{ __('No Filter') }}</option>
+                                                @foreach ($room_classes as $room_class)
+                                                    <option value="{{ $room_class->id }}"
+                                                        {{ request()->query('room_class') == $room_class->id ? 'selected' : '' }}>
+                                                        {{ $room_class->room_class }}
+                                                    </option>
+                                                @endforeach
+                                            </x-slot>
+                                        </x-select-input>
                                     </td>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @foreach ($lecture_slots as $lecture_slot)
+                                    <tr class="bg-white border-b border-gray-200 hover:bg-gray-50">
+                                        <th scope="row"
+                                            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                            {{ $loop->index + 1 }}
+                                        </th>
+                                        <td class="px-6 py-4">
+                                            {{ $lecture_slot->day->day }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ $lecture_slot->timeSlot->time_slot }}
+                                        </td>
+                                        <td class="px-6 py-4 flex flex-col gap-2">
+                                            {{ $lecture_slot->roomClass->room_class }}
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </form>
 
                     {{ $lecture_slots->links('components.pagination.pagination') }}
                 </div>
