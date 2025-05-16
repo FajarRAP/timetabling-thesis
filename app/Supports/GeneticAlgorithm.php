@@ -74,7 +74,7 @@ class GeneticAlgorithm
             ->map(fn($item) => $item['lecturer_id'])
             ->values();
 
-        for ($generation = 0; $generation < $this->maxGeneration; $generation++) {
+        for ($generation = 0; $generation < $this->maxGeneration && $population->first()['hard_violations'] < 10; $generation++) {
             for ($i = 0; $i < $this->populationSize; $i++) {
                 $hardViolations = $this->evaluateChromosome($population[$i]['chromosome']->values());
                 $softViolations = $this->evaluateSoftConstraints(
