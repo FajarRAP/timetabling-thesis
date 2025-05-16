@@ -61,9 +61,9 @@ class CourseSeeder extends Seeder
             ['course_name' => 'Robotika Informatika', 'credit_hour' => 3, 'is_has_practicum' => true, 'is_online' => false, 'is_even_semester' => false],
             ['course_name' => 'Sistem Pendukung Keputusan', 'credit_hour' => 3, 'is_has_practicum' => true, 'is_online' => false, 'is_even_semester' => false],
             ['course_name' => 'Sistem Temu Balik Informasi', 'credit_hour' => 3, 'is_has_practicum' => true, 'is_online' => false, 'is_even_semester' => false],
-            ['course_name' => 'Kemuhammadiyahan', 'credit_hour' => 2, 'is_has_practicum' => true, 'is_online' => true, 'is_even_semester' => false],
-            ['course_name' => 'Pengantar Manajemen dan Prinsip Proyek', 'credit_hour' => 2, 'is_has_practicum' => true, 'is_online' => true, 'is_even_semester' => false],
-            ['course_name' => 'Teori Bahasa Otomata', 'credit_hour' => 2, 'is_has_practicum' => true, 'is_online' => true, 'is_even_semester' => false],
+            ['course_name' => 'Kemuhammadiyahan', 'credit_hour' => 2, 'is_has_practicum' => false, 'is_online' => true, 'is_even_semester' => false],
+            ['course_name' => 'Pengantar Manajemen dan Prinsip Proyek', 'credit_hour' => 2, 'is_has_practicum' => false, 'is_online' => true, 'is_even_semester' => false],
+            ['course_name' => 'Teori Bahasa Otomata', 'credit_hour' => 2, 'is_has_practicum' => false, 'is_online' => true, 'is_even_semester' => false],
             // Semester 6
             ['course_name' => 'Tahsinul Quran', 'credit_hour' => 2, 'is_has_practicum' => false, 'is_online' => false, 'is_even_semester' => true],
             ['course_name' => 'Rekayasa Perangkat Lunak', 'credit_hour' => 3, 'is_has_practicum' => false, 'is_online' => false, 'is_even_semester' => true],
@@ -89,7 +89,7 @@ class CourseSeeder extends Seeder
             ['course_name' => 'Sosio Informatika', 'credit_hour' => 3, 'is_has_practicum' => true, 'is_online' => true, 'is_even_semester' => false],
             ['course_name' => 'Fiqih Ibadah', 'credit_hour' => 3, 'is_has_practicum' => true, 'is_online' => true, 'is_even_semester' => false],
             // Semester 8
-            ['course_name' => 'Ilmu Dakwah', 'credit_hour' => 2, 'is_has_practicum' => true, 'is_online' => true, 'is_even_semester' => true],
+            ['course_name' => 'Ilmu Dakwah', 'credit_hour' => 2, 'is_has_practicum' => false, 'is_online' => true, 'is_even_semester' => true],
         ]);
     }
 }
