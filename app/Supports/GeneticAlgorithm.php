@@ -49,7 +49,7 @@ class GeneticAlgorithm
         public int $maxGeneration = 1,
         public float $mutationRate = .2,
     ) {
-        $this->lectureSlots = LectureSlot::all();
+        $this->lectureSlots = LectureSlot::whereNull('lecture_slot_constraint_id')->get();
         $this->lectures = Lecture::all();
         $this->constrainedLecturers = LecturerConstraint::all();
         [
@@ -85,8 +85,8 @@ class GeneticAlgorithm
 
                 $population[$i]
                     ->put('hard_violations', $hardViolations)
-                    ->put('soft_violations', $softViolations)
-                    ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $hardViolations));
+                    ->put('soft_violations', (float) $softViolations / 2)
+                    ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $hardViolations + $softViolations));
             }
 
             $bestChromosome = $this->chromosomeSelection($population->values());
@@ -102,8 +102,8 @@ class GeneticAlgorithm
                 );
                 $mutatedOffsprings[$i]
                     ->put('hard_violations', $hardViolations)
-                    ->put('soft_violations', $softViolations)
-                    ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $hardViolations));
+                    ->put('soft_violations', (float) $softViolations / 2)
+                    ->put('fitness_score', $chromosomeLength / ($chromosomeLength + $hardViolations + $softViolations));
             }
 
             $population = $this->regeneration(

@@ -14,7 +14,7 @@ class LectureSlotController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $lectureSlots = LectureSlot::where('is_excluded', false)->get();
+        $lectureSlots = LectureSlot::whereNull('lecture_slot_constraint_id')->get();
 
         return view('lecture-slot', [
             'lecture_slots' => $lectureSlots,

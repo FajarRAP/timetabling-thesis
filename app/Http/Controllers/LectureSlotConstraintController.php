@@ -22,17 +22,17 @@ class LectureSlotConstraintController extends Controller
 
         $lectureSlots = LectureSlot::all();
 
-        LectureSlotConstraint::create([
+        $lectureSlotConstraint = LectureSlotConstraint::create([
             'day_id' => $validated['day'],
             'start_at' => $validated['start_at'],
             'end_at' => $validated['end_at'],
         ]);
 
-        $filtered = $lectureSlots->where(fn($item) => $item->day_id == $validated['day']);
+        $filtered = $lectureSlots->where(fn($item) => $item->day_id == $validated['day'])->values();
 
-        $filtered->each(function ($lectureSlot) use ($validated) {
+        $filtered->each(function ($lectureSlot) use ($validated, $lectureSlotConstraint) {
             if (Carbon::parse($lectureSlot->timeSlot->end_at) >= Carbon::parse($validated['start_at']) && Carbon::parse($lectureSlot->timeSlot->start_at) <= Carbon::parse($validated['end_at'])) {
-                $lectureSlot->is_excluded = true;
+                $lectureSlot->lecture_slot_constraint_id = $lectureSlotConstraint->id;
                 $lectureSlot->save();
             }
         });
