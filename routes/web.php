@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RoomClassController;
 use App\Http\Controllers\TimetableController;
 use App\Http\Controllers\TimetableEntryController;
+use App\Http\Controllers\TimetableUsedConstraintController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => view('welcome'));
@@ -55,6 +56,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/lecture-slot/constraint/{constraint}', 'destroy')->name('lecture-slot-constraint.destroy');
         });
         Route::get('/lecture-slot', LectureSlotController::class)->name('lecture-slot');
+        Route::get('/timetable/{timetable}/constraint', [TimetableUsedConstraintController::class, 'index'])->name('timetable-used-constraint.index');
     });
 });
 
