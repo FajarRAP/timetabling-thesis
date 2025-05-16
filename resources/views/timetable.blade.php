@@ -139,6 +139,13 @@
                                                 {{ __('Show entries') }}
                                             </x-primary-button>
                                         </a>
+                                        @if ($timetable->fitness_score)
+                                            <a href="{{ route('timetable-used-constraint.index', $timetable) }}">
+                                                <x-primary-button class="w-full justify-center">
+                                                    {{ __('Show Used Constraints    ') }}
+                                                </x-primary-button>
+                                            </a>
+                                        @endif
                                         <x-danger-button class="w-full justify-center" x-data
                                             x-on:click="$dispatch('open-modal', 'delete-timetable-{{ $timetable->id }}')">
                                             {{ __('Delete') }}
@@ -162,15 +169,12 @@
             @csrf
             @method('POST')
 
-            <div class="mt-6">
-                <h2 class="text-lg font-medium text-gray-900">
-                    {{ __('Create New Timetable') }}
-                </h2>
-
-                <p class="mt-1 text-sm text-gray-600">
-                    {{ __('After created please press generate timetable, to add timetable entries') }}
-                </p>
-            </div>
+            <h2 class="text-lg font-medium text-gray-900">
+                {{ __('Create New Timetable') }}
+            </h2>
+            <p class="mt-1 text-sm text-gray-600">
+                {{ __('After created please press generate timetable, to add timetable entries') }}
+            </p>
 
             <div class="mt-6 flex justify-end">
                 <x-secondary-button x-on:click="$dispatch('close')">
