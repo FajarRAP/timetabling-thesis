@@ -13,10 +13,12 @@ class LectureController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = $request->input('per_page', 10);
+
         return view('lecture', [
-            'lectures' => Lecture::paginate(10),
+            'lectures' => Lecture::paginate($perPage)->appends(['per_page' => $perPage]),
             'courses' => Course::all(),
             'lecturers' => Lecturer::all(),
         ]);
