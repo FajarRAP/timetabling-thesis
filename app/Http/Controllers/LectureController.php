@@ -16,9 +16,27 @@ class LectureController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->input('per_page', 10);
+        $lecturer = $request->query('lecturer');
+        $course = $request->query('course');
+
+        $lectures = Lecture::query();
+
+        if ($lecturer) {
+            $lectures =   $lectures->where('lecturer_id', $lecturer);
+        }
+
+        if ($course) {
+            $lectures =   $lectures->where('course_id', $course);
+        }
 
         return view('lecture', [
-            'lectures' => Lecture::paginate($perPage)->appends(['per_page' => $perPage]),
+            'lectures' => $lectures
+                ->paginate($perPage)
+                ->appends([
+                    'per_page' => $perPage,
+                    'lecturer' => $lecturer,
+                    'course' => $course,
+                ]),
             'courses' => Course::all(),
             'lecturers' => Lecturer::all(),
         ]);

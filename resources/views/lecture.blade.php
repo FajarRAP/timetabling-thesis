@@ -13,53 +13,94 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                    <table class="w-full text-sm text-left rtl:text-right text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                            <tr>
-                                <th scope="col" class="px-6 py-3">
-                                    #
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    {{ __('Lecture Course Name') }}
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    {{ __('Lecture Lecturer Name') }}
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    {{ __('Lecture Class') }}
-                                </th>
-                                <th scope="col" class="px-6 py-3">
-                                    {{ __('Actions') }}
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($lectures as $lecture)
-                                <tr class="bg-white border-b border-gray-200 hover:bg-gray-50">
-                                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                        {{ $loop->index + 1 }}
+                    <form action="{{ url()->current() }}" method="GET">
+                        <table class="w-full text-sm text-left rtl:text-right text-gray-500">
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3">
+                                        #
                                     </th>
-                                    <td class="px-6 py-4">
-                                        {{ $lecture->course->course_name }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        {{ $lecture->lecturer->lecturer_name }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        {{ $lecture->class }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <x-danger-button x-data
-                                            x-on:click="$dispatch('open-modal', 'delete-lecture-{{ $lecture->id }}')">
-                                            {{ __('Delete') }}
-                                        </x-danger-button>
-                                        <x-delete-data-modal :action="route('lecture.destroy', $lecture)"
-                                            name="delete-lecture-{{ $lecture->id }}" />
-                                    </td>
+                                    <th scope="col" class="px-6 py-3">
+                                        {{ __('Lecture Course Name') }}
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
+                                        {{ __('Lecture Lecturer Name') }}
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
+                                        {{ __('Lecture Class') }}
+                                    </th>
+                                    <th scope="col" class="px-6 py-3">
+                                        {{ __('Actions') }}
+                                    </th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+                                <tr>
+                                    <td class="px-6 py-3 font-medium text-gray-900 whitespace-nowrap">
+                                        {{ __('Filter') }}</td>
+                                    <td class="px-6 py-3">
+                                        <x-select-input class="text-sm font-normal" name="course"
+                                            onchange="this.form.submit()">
+                                            <x-slot name="options">
+                                                <option value=""
+                                                    {{ request()->query('course') ? '' : 'selected' }}>
+                                                    {{ __('No Filter') }}</option>
+                                                @foreach ($courses as $course)
+                                                    <option value="{{ $course->id }}"
+                                                        {{ request()->query('course') == $course->id ? 'selected' : '' }}>
+                                                        {{ $course->course_name }}
+                                                    </option>
+                                                @endforeach
+                                            </x-slot>
+                                        </x-select-input>
+                                    </td>
+                                    <td class="px-6 py-3">
+                                        <x-select-input class="text-sm font-normal" name="lecturer"
+                                            onchange="this.form.submit()">
+                                            <x-slot name="options">
+                                                <option value=""
+                                                    {{ request()->query('lecturer') ? '' : 'selected' }}>
+                                                    {{ __('No Filter') }}</option>
+                                                @foreach ($lecturers as $lecturer)
+                                                    <option value="{{ $lecturer->id }}"
+                                                        {{ request()->query('lecturer') == $lecturer->id ? 'selected' : '' }}>
+                                                        {{ $lecturer->lecturer_name }}
+                                                    </option>
+                                                @endforeach
+                                            </x-slot>
+                                        </x-select-input>
+                                    </td>
+                                    <td class="px-6 py-3"></td>
+                                    <td class="px-6 py-3"></td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($lectures as $lecture)
+                                    <tr class="bg-white border-b border-gray-200 hover:bg-gray-50">
+                                        <th scope="row"
+                                            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                            {{ $loop->index + 1 }}
+                                        </th>
+                                        <td class="px-6 py-4">
+                                            {{ $lecture->course->course_name }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ $lecture->lecturer->lecturer_name }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            {{ $lecture->class }}
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <x-danger-button type="button" x-data
+                                                x-on:click="$dispatch('open-modal', 'delete-lecture-{{ $lecture->id }}')">
+                                                {{ __('Delete') }}
+                                            </x-danger-button>
+                                            <x-delete-data-modal :action="route('lecture.destroy', $lecture)"
+                                                name="delete-lecture-{{ $lecture->id }}" />
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </form>
 
                     {{ $lectures->links('components.pagination.pagination') }}
                 </div>
