@@ -10,10 +10,12 @@ class CourseController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = $request->input('per_page', 10);
+
         return view('course', [
-            'courses' => Course::paginate(10),
+            'courses' => Course::paginate(10)->appends(['per_page' => $perPage]),
         ]);
     }
 
