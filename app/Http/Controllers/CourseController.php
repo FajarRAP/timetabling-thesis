@@ -12,10 +12,46 @@ class CourseController extends Controller
      */
     public function index(Request $request)
     {
+
         $perPage = $request->input('per_page', 10);
+        $creditHour = $request->query('credit_hour');
+        $isHasPracticum = $request->query('is_has_practicum');
+        $isOnline = $request->query('is_online');
+        $isEvenSemester = $request->query('is_even_semester');
+        $course = Course::query();
+
+        if ($creditHour) {
+            $course = $course->where('credit_hour', '=', $creditHour);
+        }
+
+        $course = match ($isHasPracticum) {
+            'is_has_practicum' => $course->where('is_has_practicum', '=', 1),
+            'is_not_has_practicum' => $course->where('is_has_practicum', '=', 0),
+            default => $course,
+        };
+
+        $course = match ($isOnline) {
+            'is_online' => $course->where('is_online', '=', 1),
+            'is_not_online' => $course->where('is_online', '=', 0),
+            default => $course,
+        };
+
+        $course = match ($isEvenSemester) {
+            'is_even_semester' => $course->where('is_even_semester', '=', 1),
+            'is_not_even_semester' => $course->where('is_even_semester', '=', 0),
+            default => $course,
+        };
 
         return view('course', [
-            'courses' => Course::paginate(10)->appends(['per_page' => $perPage]),
+            'courses' => $course
+                ->paginate(10)
+                ->appends([
+                    'per_page' => $perPage,
+                    'credit_hour' => $creditHour,
+                    'is_has_practicum' => $isHasPracticum,
+                    'is_online' => $isOnline,
+                    'is_even_semester' => $isEvenSemester,
+                ]),
         ]);
     }
 
