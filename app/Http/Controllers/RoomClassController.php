@@ -13,10 +13,12 @@ class RoomClassController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $perPage = $request->input('per_page', 10);
+
         return view('room-class', [
-            'roomClasses' => RoomClass::paginate(10),
+            'roomClasses' => RoomClass::paginate(10)->appends(['per_page' => $perPage]),
         ]);
     }
 
