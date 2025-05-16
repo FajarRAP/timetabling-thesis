@@ -10,7 +10,7 @@
             <span class="font-bold text-gray-900">{{ $paginator->total() }}</span>
         </span>
         <span class="text-sm font-medium flex gap-3 items-center">
-            {{ __('Show Data Per Page') }}
+            {{ __('Entries Per Page') }}
             <form action="{{ url()->current() }}" method="GET">
                 <x-select-input name="per_page" onchange="this.form.submit()">
                     <x-slot name="options">
