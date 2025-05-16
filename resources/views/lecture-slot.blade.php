@@ -63,7 +63,7 @@
     </div>
 
     <x-modal name="add-constraint" :show="$errors->addLectureSlotConstraint->isNotEmpty()" focusable>
-        <form method="POST" action="{{ route('lecture-slot.constraint') }}" class="p-6">
+        <form method="POST" action="{{ route('lecture-slot-constraint.store') }}" class="p-6">
             @csrf
             @method('POST')
 
@@ -128,6 +128,9 @@
                             <th scope="col" class="px-6 py-3">
                                 {{ __('End At') }}
                             </th>
+                            <th scope="col" class="px-6 py-3">
+                                {{ __('Action') }}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -142,8 +145,18 @@
                                 <td class="px-6 py-4">
                                     {{ $constraint->start_at }}
                                 </td>
-                                <td class="px-6 py-4 flex flex-col gap-2">
+                                <td class="px-6 py-4">
                                     {{ $constraint->end_at }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <form action="{{ route('lecture-slot-constraint.destroy', $constraint) }}"
+                                        method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <x-danger-button>
+                                            {{ __('Delete') }}
+                                        </x-danger-button>
+                                    </form>
                                 </td>
                             </tr>
                         @endforeach

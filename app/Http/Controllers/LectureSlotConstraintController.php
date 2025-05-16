@@ -9,10 +9,7 @@ use Illuminate\Http\Request;
 
 class LectureSlotConstraintController extends Controller
 {
-    /**
-     * Handle the incoming request.
-     */
-    public function __invoke(Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validateWithBag('addLectureSlotConstraint', [
             'day' => ['required', 'exists:days,id'],
@@ -38,5 +35,20 @@ class LectureSlotConstraintController extends Controller
         });
 
         return redirect(route('lecture-slot'))->with('success', 'Lecture slot constraint added successfully.');
+    }
+
+    public function destroy(Request $request, LectureSlotConstraint $constraint)
+    {
+        $lectureSlots = LectureSlot::all();
+        $filtered = $lectureSlots
+            ->where(fn($item) => $item->lecture_slot_constraint_id == $constraint->id)
+            ->values();
+        $filtered->each(function ($lectureSlot) {
+            $lectureSlot->lecture_slot_constraint_id = null;
+            $lectureSlot->save();
+        });
+        $constraint->delete();
+
+        return redirect(route('lecture-slot'))->with('success', 'Lecture slot constraint deleted successfully.');
     }
 }

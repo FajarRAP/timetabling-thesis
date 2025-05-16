@@ -50,8 +50,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/timetable/{timetable}/entry', 'index')->name('timetable-entry');
             Route::post('/timetable/{timetable}/entry', 'store')->name('timetable-entry.store');
         });
+        Route::controller(LectureSlotConstraintController::class)->group(function () {
+            Route::post('/lecture-slot/constraint', 'store')->name('lecture-slot-constraint.store');
+            Route::delete('/lecture-slot/constraint/{constraint}', 'destroy')->name('lecture-slot-constraint.destroy');
+        });
         Route::get('/lecture-slot', LectureSlotController::class)->name('lecture-slot');
-        Route::post('/lecture-slot/constraint', LectureSlotConstraintController::class)->name('lecture-slot.constraint');
     });
 });
 
