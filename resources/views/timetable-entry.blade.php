@@ -39,27 +39,7 @@
                             </thead>
                             <tbody>
                                 @foreach ($timetable_entries as $timetable_entry)
-                                    <tr class="bg-white border-b border-gray-200 hover:bg-gray-50">
-                                        <th scope="row"
-                                            class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                            {{ $loop->index + 1 }}
-                                        </th>
-                                        <td class="px-6 py-4">
-                                            {{ $timetable_entry->lectureSlot->day->day }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            {{ $timetable_entry->lectureSlot->timeSlot->time_slot }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            {{ __($timetable_entry->lecture->course->course_name) }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            {{ __($timetable_entry->lecture->lecturer->lecturer_name) }}
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            {{ __($timetable_entry->lecture->class) }}
-                                        </td>
-                                    </tr>
+                                    <x-timetable-entry-row :$timetable_entry :index="$loop->index + 1" />
                                 @endforeach
                             </tbody>
                         </table>
