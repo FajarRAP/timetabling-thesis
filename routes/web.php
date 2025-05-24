@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/timetable', 'index')->name('timetable');
             Route::post('/timetable', 'store')->name('timetable.store');
             Route::delete('/timetable/{timetable}', 'destroy')->name('timetable.destroy');
+            Route::post('/timetable/{timetable}/export', 'exportSpreadsheet')->name('timetable.export');
         });
         Route::controller(TimetableEntryController::class)->group(function () {
             Route::get('/timetable/{timetable}/entry', 'index')->name('timetable-entry');

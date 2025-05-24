@@ -148,9 +148,16 @@
                                         @if ($timetable->fitness_score)
                                             <a href="{{ route('timetable-used-constraint.index', $timetable) }}">
                                                 <x-primary-button class="w-full justify-center">
-                                                    {{ __('Show Used Constraints    ') }}
+                                                    {{ __('Show Used Constraints') }}
                                                 </x-primary-button>
                                             </a>
+                                            <form action="{{ route('timetable.export', $timetable) }}" method="POST">
+                                                @csrf
+                                                @method('POST')
+                                                <x-primary-button class="w-full justify-center">
+                                                    {{ __('Export to .xlsx') }}
+                                                </x-primary-button>
+                                            </form>
                                         @endif
                                         <x-danger-button class="w-full justify-center" x-data
                                             x-on:click="$dispatch('open-modal', 'delete-timetable-{{ $timetable->id }}')">

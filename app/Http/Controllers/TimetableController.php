@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Timetable;
+use App\Models\TimetableEntry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class TimetableController extends Controller
 {
@@ -69,5 +73,34 @@ class TimetableController extends Controller
         $timetable->delete();
 
         return back()->with('success', __('Delete Data Successful'));
+    }
+
+    public function exportSpreadsheet(Timetable $timetable)
+    {
+        $sortByDay = fn(TimetableEntry $first, TimetableEntry $second)
+        => $first->lectureSlot->day->id <=> $second->lectureSlot->day->id;
+        $sortByTimeSlot = fn(TimetableEntry $first, TimetableEntry $second)
+        => $first->lectureSlot->timeSlot->start_at <=> $second->lectureSlot->timeSlot->start_at;
+        // $mapSort = fn(Collection $item) => $item->sortBy([$sortByDay, $sortByTimeSlot]);
+        $sortedEntries = $timetable->entries->sortBy([$sortByDay, $sortByTimeSlot])->values();
+
+        $spreadsheet = new Spreadsheet();
+        $activeSheet = $spreadsheet->getActiveSheet();
+        $activeSheet->setTitle('Timetable');
+        $activeSheet->setCellValue([1, 1], 'Day');
+        $activeSheet->setCellValue([2, 1], 'Time Slot');
+        $activeSheet->setCellValue([3, 1], 'Room Class');
+        $activeSheet->setCellValue([4, 1], 'Lecture');
+        foreach ($sortedEntries as $i => $v) {
+            $activeSheet->setCellValue([1, $i + 2], $v->lectureSlot->day->day);
+            $activeSheet->setCellValue([2, $i + 2], $v->lectureSlot->timeSlot->time_slot);
+            $activeSheet->setCellValue([3, $i + 2], $v->lectureSlot->roomClass->room_class);
+            $activeSheet->setCellValue([4, $i + 2], "{$v->lecture->course->course_name}/{$v->lecture->class}/{$v->lecture->lecturer->lecturer_name}");
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $writer->save("timetables/$timetable->id.xlsx");
+
+        return back()->with('success', 'Export Spreadsheet Successful');
     }
 }
