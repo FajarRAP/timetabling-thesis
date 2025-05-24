@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->float('fitness_score')->nullable();
             $table->integer('max_generation')->nullable();
+            $table->integer('stopped_at_generation')->nullable();
             $table->integer('population_size')->nullable();
             $table->float('mutation_rate')->nullable();
             $table->float('hard_violations')->nullable();
