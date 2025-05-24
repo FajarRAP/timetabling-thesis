@@ -74,7 +74,7 @@ class GeneticAlgorithm
             ->map(fn($item) => $item['lecturer_id'])
             ->values();
 
-        for ($generation = 0; $generation < $this->maxGeneration && $population->first()['hard_violations'] < 10; $generation++) {
+        for ($generation = 0; $generation < $this->maxGeneration; $generation++) {
             for ($i = 0; $i < $this->populationSize; $i++) {
                 $hardViolations = $this->evaluateChromosome($population[$i]['chromosome']->values());
                 $softViolations = $this->evaluateSoftConstraints(
@@ -110,12 +110,19 @@ class GeneticAlgorithm
                 $population->values(),
                 $mutatedOffsprings->values(),
             );
+
+            if ($population->first()['hard_violations'] < 10) {
+                return [
+                    'population' => $population->first()->put('stopped_at_generation', $generation),
+                    'execution_times' => microtime(true) - $startTime,
+                ];
+            }
         }
 
         $endTime = microtime(true);
 
         return [
-            'population' => $population->first(),
+            'population' => $population->first()->put('stopped_at_generation', $generation),
             'execution_times' => $endTime - $startTime,
         ];
     }
@@ -148,6 +155,10 @@ class GeneticAlgorithm
             $chromosome = $this->initializeChromosome();
             $mappedChromosome = $this->mapChromosome($chromosome->values());
             $population->push(collect([])->put('chromosome', $mappedChromosome));
+            $population[$i]
+                ->put('hard_violations', 0)
+                ->put('soft_violations', 0)
+                ->put('fitness_score', 0);
         }
 
         return $population;

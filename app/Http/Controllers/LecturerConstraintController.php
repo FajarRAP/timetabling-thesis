@@ -46,11 +46,16 @@ class LecturerConstraintController extends Controller
             ]
         );
 
-        $mappedConstraints->each(fn($item)
-        => LecturerConstraint::updateOrCreate(
-            ['lecturer_id' => $item['lecturer_id'], 'lecture_id' => $item['lecture_id']],
-            ['day_id' => $item['day_id'], 'start_at' => $item['start_at'], 'end_at' => $item['end_at']]
-        ));
+        $mappedConstraints->each(
+            function ($item) {
+                // if (!$item['day_id'] && !$item['start_at'] && !$item['end_at']) return;
+
+                LecturerConstraint::updateOrCreate(
+                    ['lecturer_id' => $item['lecturer_id'], 'lecture_id' => $item['lecture_id']],
+                    ['day_id' => $item['day_id'], 'start_at' => $item['start_at'], 'end_at' => $item['end_at']]
+                );
+            }
+        );
 
         return redirect(route('lecturer'))->with('success', __('Add Constraints Successful'));
     }

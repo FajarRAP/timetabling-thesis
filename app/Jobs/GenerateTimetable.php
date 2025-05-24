@@ -37,6 +37,7 @@ class GenerateTimetable implements ShouldQueue
         $executionTimes = $result['execution_times'];
         $hardViolations = $result['population']['hard_violations'];
         $softViolations = $result['population']['soft_violations'];
+        $stoppedAtGeneration = $result['population']['stopped_at_generation'];
 
         $mappedChromosome = $chromosome->map(fn(array $item) => [
             'timetable_id' => $this->timetable->id,
@@ -51,6 +52,7 @@ class GenerateTimetable implements ShouldQueue
         $this->timetable->execution_times = $executionTimes;
         $this->timetable->hard_violations = $hardViolations;
         $this->timetable->soft_violations = $softViolations;
+        $this->timetable->stopped_at_generation = $stoppedAtGeneration;
         $this->timetable->save();
 
         $mappedChromosome->each(fn(array $item) => TimetableEntry::create($item));

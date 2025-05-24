@@ -26,6 +26,9 @@
                                     {{ __('Max Generation') }}
                                 </th>
                                 <th scope="col" class="px-6 py-3">
+                                    {{ __('Stopped At Generation') }}
+                                </th>
+                                <th scope="col" class="px-6 py-3">
                                     {{ __('Population Size') }}
                                 </th>
                                 <th scope="col" class="px-6 py-3">
@@ -59,6 +62,9 @@
                                     </td>
                                     <td class="px-6 py-4">
                                         {{ $timetable->max_generation ?? __('Not yet generated') }}
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        {{ $timetable->stopped_at_generation ?? __('Not yet generated') }}
                                     </td>
                                     <td class="px-6 py-4">
                                         {{ $timetable->population_size ?? __('Not yet generated') }}
