@@ -22,4 +22,9 @@ class TimetableEntry extends Model
     {
         return $this->belongsTo(LectureSlot::class);
     }
+
+    public function timetable(): BelongsTo
+    {
+        return $this->belongsTo(Timetable::class);
+    }
 }

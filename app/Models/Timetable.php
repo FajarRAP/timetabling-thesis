@@ -18,4 +18,9 @@ class Timetable extends Model
     {
         return $this->hasMany(TimetableUsedConstraint::class);
     }
+
+    public function entries()
+    {
+        return $this->hasMany(TimetableEntry::class);
+    }
 }
