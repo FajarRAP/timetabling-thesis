@@ -11,6 +11,7 @@ class TimetableEntry extends Model
         'timetable_id',
         'lecture_id',
         'lecture_slot_id',
+        'is_hard_violated',
     ];
 
     public function lecture(): BelongsTo

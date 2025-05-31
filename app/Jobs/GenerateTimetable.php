@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Timetable;
 use App\Models\TimetableEntry;
 use App\Supports\GeneticAlgorithm;
+use Carbon\Carbon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -56,5 +57,50 @@ class GenerateTimetable implements ShouldQueue
         $this->timetable->save();
 
         $mappedChromosome->each(fn(array $item) => TimetableEntry::create($item));
+        $this->checkViolations();
+    }
+
+    private function checkViolations(): bool
+    {
+        $entries = $this->timetable->entries;
+
+        for ($i = 0; $i < $entries->count(); $i++) {
+            $startAtFirst = Carbon::parse($entries[$i]->lectureSlot->timeSlot->start_at);
+            $endAtFirst = Carbon::parse($entries[$i]->lectureSlot->timeSlot->end_at);
+
+            for ($j = $i + 1; $j < $entries->count(); $j++) {
+                $startAtSecond = Carbon::parse($entries[$j]->lectureSlot->timeSlot->start_at);
+                $endAtSecond = Carbon::parse($entries[$j]->lectureSlot->timeSlot->end_at);
+                $isSameRoomClass = $entries[$i]->lectureSlot->roomClass->id == $entries[$j]->lectureSlot->roomClass->id;
+                $isSameDay = $entries[$i]->lectureSlot->day->id == $entries[$j]->lectureSlot->day->id;
+                $isOnlineClass = $entries[$i]->lectureSlot->roomClass->id == 1;
+                $isCertainLecturer = $entries[$i]->lecture->lecturer->id < 34;
+                $isSameLecturer = $entries[$i]->lecture->lecturer->id == $entries[$j]->lecture->lecturer->id;
+
+                // Bentrok ruang kelas (room class) dan waktu (time slot)
+                // Kelas online tidak ada bentrok ruangan
+                if (!$isOnlineClass && $isSameRoomClass && $isSameDay) {
+                    if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
+                        $entries[$i]->is_hard_violated = true;
+                        $entries[$i]->save();
+                        $entries[$j]->is_hard_violated = true;
+                        $entries[$j]->save();
+                    }
+                }
+
+                // Bentrok dosen (lecturer) dan waktu (time slot)
+                // Ada dosen (lecturer) yang tidak tentu, yaitu LPSI (id 34) dan LPP (id 35)
+                if ($isCertainLecturer && $isSameLecturer && $isSameDay) {
+                    if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
+                        $entries[$i]->is_hard_violated = true;
+                        $entries[$i]->save();
+                        $entries[$j]->is_hard_violated = true;
+                        $entries[$j]->save();
+                    }
+                }
+            }
+        }
+
+        return $this->timetable->save();
     }
 }
