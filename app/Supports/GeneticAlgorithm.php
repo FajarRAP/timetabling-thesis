@@ -78,9 +78,8 @@ class GeneticAlgorithm
             for ($i = 0; $i < $this->populationSize; $i++) {
                 $hardViolations = $this->evaluateChromosome($population[$i]['chromosome']->values());
                 $softViolations = $this->evaluateSoftConstraints(
-                    $this->constrainedLecturers,
                     $constrainedLecturerIds,
-                    $population[$i]['chromosome']
+                    $population[$i]['chromosome']->values(),
                 );
 
                 $population[$i]
@@ -96,9 +95,8 @@ class GeneticAlgorithm
             for ($i = 0; $i < $mutatedOffsprings->count(); $i++) {
                 $hardViolations = $this->evaluateChromosome($mutatedOffsprings[$i]['chromosome']->values());
                 $softViolations = $this->evaluateSoftConstraints(
-                    $this->constrainedLecturers,
                     $constrainedLecturerIds,
-                    $mutatedOffsprings[$i]['chromosome']
+                    $mutatedOffsprings[$i]['chromosome']->values(),
                 );
                 $mutatedOffsprings[$i]
                     ->put('hard_violations', $hardViolations)
@@ -182,11 +180,12 @@ class GeneticAlgorithm
                 $isSameDay = $chromosome[$i]['lecture_slot']['day']['id'] == $chromosome[$j]['lecture_slot']['day']['id'];
                 $isSameLecturer = $chromosome[$i]['lecture']['lecturer']['id'] == $chromosome[$j]['lecture']['lecturer']['id'];
 
+                // += 2 karena bentrok ini dihitung 2x, yaitu i dan j
                 // Bentrok ruang kelas (room class) dan waktu (time slot)
                 // Kelas online tidak ada bentrok ruangan
                 if (!$isOnlineClass && $isSameRoomClass && $isSameDay) {
                     if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
-                        $hardViolations++;
+                        $hardViolations += 2;
                     }
                 }
 
@@ -194,7 +193,7 @@ class GeneticAlgorithm
                 // Ada dosen (lecturer) yang tidak tentu, yaitu LPSI (id 34) dan LPP (id 35)
                 if ($isCertainLecturer && $isSameLecturer && $isSameDay) {
                     if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
-                        $hardViolations++;
+                        $hardViolations += 2;
                     }
                 }
             }
@@ -203,7 +202,7 @@ class GeneticAlgorithm
         return $hardViolations;
     }
 
-    private function evaluateSoftConstraints(Collection $constrainedLecturers, Collection $constrainedLecturerIds, Collection $chromosome): int
+    private function evaluateSoftConstraints(Collection $constrainedLecturerIds, Collection $chromosome): int
     {
         $softViolations = 0;
 
@@ -211,7 +210,7 @@ class GeneticAlgorithm
             $lectureSlots = $chromosome
                 ->filter(fn($item) => $item['lecture']['lecturer']['id'] == $lecturerId)
                 ->values();
-            $lecturerConstraints = $constrainedLecturers
+            $lecturerConstraints = $this->constrainedLecturers
                 ->where('lecturer_id', $lecturerId)
                 ->values();
 
@@ -277,6 +276,21 @@ class GeneticAlgorithm
             $randomNumber = $this->getRandomNumber();
             $arrOffspring = $offspring->toArray();
 
+            // Setiap gen diiterasi dan dimutasi jika random number kurang dari mutation rate
+            // foreach ($arrOffspring['chromosome'] as $index => $gene) {
+            //     if ($this->getRandomNumber() < $this->mutationRate) {
+            //         $randomLectureSlot = $this->randomizedLectureSlot($gene);
+            //         $arrOffspring['chromosome'][$index]['lecture_slot']['id'] = $randomLectureSlot->id;
+            //         $arrOffspring['chromosome'][$index]['lecture_slot']['day']['id'] = $randomLectureSlot->day->id;
+            //         $arrOffspring['chromosome'][$index]['lecture_slot']['time_slot']['id'] = $randomLectureSlot->timeSlot->id;
+            //         $arrOffspring['chromosome'][$index]['lecture_slot']['time_slot']['credit_hour'] = $randomLectureSlot->timeSlot->credit_hour;
+            //         $arrOffspring['chromosome'][$index]['lecture_slot']['time_slot']['start_at'] = $randomLectureSlot->timeSlot->start_at;
+            //         $arrOffspring['chromosome'][$index]['lecture_slot']['time_slot']['end_at'] = $randomLectureSlot->timeSlot->end_at;
+            //         $arrOffspring['chromosome'][$index]['lecture_slot']['room_class']['id'] = $randomLectureSlot->roomClass->id;
+            //     }
+            // }
+
+            // Hanya mengambil 1 gen dari kromosom
             if ($randomNumber < $this->mutationRate) {
                 $randomIndex = rand(0, $offspring['chromosome']->count() - 1);
                 $randomLectureSlot = $this->randomizedLectureSlot($arrOffspring['chromosome'][$randomIndex]);
@@ -337,11 +351,11 @@ class GeneticAlgorithm
             ],
             'lecture_slot' => [
                 'id' => $value['lecture_slot']->id,
-
                 'day' => [
                     'id' => $value['lecture_slot']->day->id,
                 ],
                 'time_slot' => [
+                    'id' => $value['lecture_slot']->timeSlot->id,
                     'credit_hour' => $value['lecture_slot']->timeSlot->credit_hour,
                     'start_at' => $value['lecture_slot']->timeSlot->start_at,
                     'end_at' => $value['lecture_slot']->timeSlot->end_at,
