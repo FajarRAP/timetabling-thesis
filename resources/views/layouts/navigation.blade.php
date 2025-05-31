@@ -15,7 +15,9 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('timetable')" :active="request()->routeIs('timetable') || request()->routeIs('timetable-entry')">
+                    <x-nav-link :href="route('timetable')" :active="request()->routeIs('timetable') ||
+                        request()->routeIs('timetable-entry') ||
+                        request()->routeIs('timetable-used-constraint.index')">
                         {{ __('Timetable') }}
                     </x-nav-link>
                     <x-nav-link :href="route('lecture-slot')" :active="request()->routeIs('lecture-slot')">
@@ -96,7 +98,9 @@
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('timetable')" :active="request()->routeIs('timetable') || request()->routeIs('timetable-entry')">
+            <x-responsive-nav-link :href="route('timetable')" :active="request()->routeIs('timetable') ||
+                request()->routeIs('timetable-entry') ||
+                request()->routeIs('timetable-used-constraint.index')">
                 {{ __('Timetable') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('lecture-slot')" :active="request()->routeIs('lecture-slot')">
