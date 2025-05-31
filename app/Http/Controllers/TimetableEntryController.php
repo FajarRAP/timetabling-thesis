@@ -8,7 +8,6 @@ use App\Models\LectureSlotConstraint;
 use App\Models\Timetable;
 use App\Models\TimetableEntry;
 use App\Models\TimetableUsedConstraint;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -26,39 +25,6 @@ class TimetableEntryController extends Controller
         $mapSort = fn(Collection $item) => $item->sortBy([$sortByDay, $sortByTimeSlot]);
 
         $timetableEntries = $timetable->entries;
-
-        for ($i = 0; $i < $timetableEntries->count(); $i++) {
-            $startAtFirst = Carbon::parse($timetableEntries[$i]->lectureSlot->timeSlot->start_at);
-            $endAtFirst = Carbon::parse($timetableEntries[$i]->lectureSlot->timeSlot->end_at);
-
-            for ($j = $i + 1; $j < $timetableEntries->count(); $j++) {
-                $startAtSecond = Carbon::parse($timetableEntries[$j]->lectureSlot->timeSlot->start_at);
-                $endAtSecond = Carbon::parse($timetableEntries[$j]->lectureSlot->timeSlot->end_at);
-                $isSameRoomClass = $timetableEntries[$i]->lectureSlot->roomClass->id == $timetableEntries[$j]->lectureSlot->roomClass->id;
-                $isSameDay = $timetableEntries[$i]->lectureSlot->day->id == $timetableEntries[$j]->lectureSlot->day->id;
-                $isOnlineClass = $timetableEntries[$i]->lectureSlot->roomClass->id == 1;
-                $isCertainLecturer = $timetableEntries[$i]->lecture->lecturer->id < 34;
-                $isSameLecturer = $timetableEntries[$i]->lecture->lecturer->id == $timetableEntries[$j]->lecture->lecturer->id;
-
-                // Bentrok ruang kelas (room class) dan waktu (time slot)
-                // Kelas online tidak ada bentrok ruangan
-                if (!$isOnlineClass && $isSameRoomClass && $isSameDay) {
-                    if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
-                        $timetableEntries[$i]['is_violated'] = true;
-                        $timetableEntries[$j]['is_violated'] = true;
-                    }
-                }
-
-                // Bentrok dosen (lecturer) dan waktu (time slot)
-                // Ada dosen (lecturer) yang tidak tentu, yaitu LPSI (id 34) dan LPP (id 35)
-                if ($isCertainLecturer && $isSameLecturer && $isSameDay) {
-                    if ($startAtFirst < $endAtSecond && $endAtFirst > $startAtSecond) {
-                        $timetableEntries[$i]['is_violated'] = true;
-                        $timetableEntries[$j]['is_violated'] = true;
-                    }
-                }
-            }
-        }
 
         $groupByRoomClass = $timetableEntries
             ->groupBy(fn(TimetableEntry $item) => $item->lectureSlot->roomClass->room_class)
